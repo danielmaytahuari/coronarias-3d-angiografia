@@ -349,7 +349,7 @@
             <div id="angioViewer">
                 <div class="placeholder-text">
                     <h3>Selecciona una proyección angiográfica</h3>
-                    <p>Las imágenes 2D se sincronizarán automáticamente con el modelo 3D</p>
+                    <p>Los videos 2D se sincronizarán automáticamente con el modelo 3D</p>
                 </div>
             </div>
         </div>
@@ -426,117 +426,117 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
+        // ============================================================================
+        // CONFIGURACIÓN DE VIDEOS MP4 - AQUÍ PONES TUS URLS DE GITHUB
+        // ============================================================================
+        
+        const BASE_VIDEO_URL = 'https://raw.githubusercontent.com/danielmaytahuari/coronarias-3d-angiografia/main/videos/';
+        
+        // MAPEO DE PROYECCIONES A ARCHIVOS DE VIDEO
+        // Reemplaza estos nombres con los nombres reales de tus archivos MP4
+        const VIDEO_FILES = {
+            'RAO30': 'rao-30.mp4',
+            'LAO45': 'lao-45.mp4',
+            'LAO60': 'lao-60.mp4',
+            'RAO30-CRAN30': 'rao-30-cran-30.mp4',
+            'LAO45-CRAN30': 'lao-45-cran-30.mp4',
+            'LAO45-CAUD30': 'lao-45-caud-30.mp4',
+            'AP-CRAN30': 'ap-cran-30.mp4',
+            'AP-CAUD30': 'ap-caud-30.mp4',
+            'SPIDER': 'spider-view.mp4',
+            'LATERAL': 'lateral.mp4'
+        };
+
+        // ============================================================================
+        // VARIABLES GLOBALES
+        // ============================================================================
+        
         let scene, camera, renderer, coronaries;
         let isRotating = false;
         let currentCase = 'normal';
         let currentProjection = null;
         let showAnnotations = false;
 
-        // Base de datos de proyecciones angiográficas
-        // AQUÍ PONDRÍAS TUS VIDEOS O SECUENCIAS REALES
+        // Base de datos de proyecciones con URLs reales
         const projectionDatabase = {
             'normal': {
                 'RAO30': {
-                    type: 'video',  // 'video', 'frames', o 'image'
-                    video: 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMWlzb20=',  // Placeholder - pon tu video aquí
-                    poster: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23000"/><text x="200" y="180" fill="%23fff" text-anchor="middle" font-size="18">RAO 30° - Normal</text><text x="200" y="210" fill="%23aaa" text-anchor="middle" font-size="12">Video angiográfico</text><text x="200" y="240" fill="%2300d4ff" text-anchor="middle" font-size="14">▶ Click para reproducir</text></svg>',
+                    type: 'video',
+                    video: BASE_VIDEO_URL + VIDEO_FILES['RAO30'],
                     description: 'Visualiza RCA proximal y media, bifurcación LAD/Cx',
                     cameraPos: { x: 12, y: 3, z: 12 },
-                    loop: true,
-                    fps: 15
+                    loop: true
                 },
                 'LAO45': {
-                    type: 'frames',  // Secuencia de frames
-                    frames: [
-                        // Aquí pondrías array de URLs a tus frames PNG
-                        'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23000"/><text x="200" y="200" fill="%23fff" text-anchor="middle">Frame 1</text></svg>',
-                        'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23000"/><text x="200" y="200" fill="%23fff" text-anchor="middle">Frame 2</text></svg>',
-                        'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23000"/><text x="200" y="200" fill="%23fff" text-anchor="middle">Frame 3</text></svg>'
-                    ],
+                    type: 'video',
+                    video: BASE_VIDEO_URL + VIDEO_FILES['LAO45'],
                     description: 'LAD completa sin sobreposición',
                     cameraPos: { x: -12, y: 3, z: 12 },
-                    fps: 15
+                    loop: true
                 },
                 'LAO60': {
-                    type: 'image',
-                    image: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23000"/><text x="200" y="200" fill="%23fff" text-anchor="middle" font-size="20">LAO 60° - Normal</text></svg>',
+                    type: 'video',
+                    video: BASE_VIDEO_URL + VIDEO_FILES['LAO60'],
                     description: 'Separación óptima LAD y diagonales',
-                    cameraPos: { x: -15, y: 3, z: 10 }
+                    cameraPos: { x: -15, y: 3, z: 10 },
+                    loop: true
                 },
                 'RAO30-CRAN30': {
                     type: 'video',
-                    video: 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMWlzb20=',
-                    poster: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23000"/><text x="200" y="200" fill="%23fff" text-anchor="middle" font-size="18">RAO 30° CRAN 30°</text><text x="200" y="230" fill="%2300d4ff" text-anchor="middle">▶ Bifurcación LM</text></svg>',
+                    video: BASE_VIDEO_URL + VIDEO_FILES['RAO30-CRAN30'],
                     description: 'Bifurcación tronco común - GOLD STANDARD',
                     cameraPos: { x: 10, y: 12, z: 10 },
                     loop: true
                 },
                 'LAO45-CRAN30': {
                     type: 'video',
-                    video: 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMWlzb20=',
-                    poster: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23000"/><text x="200" y="200" fill="%23fff" text-anchor="middle" font-size="20">LAO 45° CRAN 30°</text></svg>',
+                    video: BASE_VIDEO_URL + VIDEO_FILES['LAO45-CRAN30'],
                     description: 'LAD proximal y medio sin foreshortening',
                     cameraPos: { x: -10, y: 12, z: 10 },
                     loop: true
                 },
                 'LAO45-CAUD30': {
                     type: 'video',
-                    video: 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMWlzb20=',
-                    poster: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23000"/><text x="200" y="200" fill="%23fff" text-anchor="middle" font-size="20">LAO 45° CAUD 30°</text></svg>',
+                    video: BASE_VIDEO_URL + VIDEO_FILES['LAO45-CAUD30'],
                     description: 'Visualiza LCx y marginales obtusas',
                     cameraPos: { x: -10, y: -10, z: 12 },
                     loop: true
                 },
                 'AP-CRAN30': {
-                    type: 'image',
-                    image: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23000"/><text x="200" y="200" fill="%23fff" text-anchor="middle" font-size="20">AP CRAN 30°</text></svg>',
-                    description: 'LAD distal y apex',
-                    cameraPos: { x: 0, y: 15, z: 12 }
-                },
-                'AP-CAUD30': {
-                    type: 'image',
-                    image: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23000"/><text x="200" y="200" fill="%23fff" text-anchor="middle" font-size="20">AP CAUD 30°</text></svg>',
-                    description: 'RCA media y distal',
-                    cameraPos: { x: 0, y: -12, z: 15 }
-                },
-                'SPIDER': {
-                    type: 'image',
-                    image: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23000"/><text x="200" y="200" fill="%23fff" text-anchor="middle" font-size="20">Spider View</text></svg>',
-                    description: 'Vista superior - todas las arterias',
-                    cameraPos: { x: 0, y: 25, z: 0 }
-                },
-                'LATERAL': {
-                    type: 'image',
-                    image: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23000"/><text x="200" y="200" fill="%23fff" text-anchor="middle" font-size="20">Lateral</text></svg>',
-                    description: 'Vista lateral pura',
-                    cameraPos: { x: 20, y: 0, z: 0 }
-                }
-            },
-            'lad-stenosis': {
-                'RAO30-CRAN30': {
                     type: 'video',
-                    video: 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMWlzb20=',
-                    poster: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23000"/><text x="200" y="160" fill="%23fff" text-anchor="middle" font-size="18">RAO 30° CRAN 30°</text><text x="200" y="190" fill="%23ff4757" text-anchor="middle" font-size="16" font-weight="bold">⚠️ ESTENOSIS 90%</text><text x="200" y="215" fill="%23aaa" text-anchor="middle" font-size="12">LAD Proximal antes D1</text><text x="200" y="250" fill="%2300d4ff" text-anchor="middle">▶ Ver secuencia</text></svg>',
-                    description: 'Estenosis crítica LAD proximal',
-                    cameraPos: { x: 10, y: 12, z: 10 },
+                    video: BASE_VIDEO_URL + VIDEO_FILES['AP-CRAN30'],
+                    description: 'LAD distal y apex',
+                    cameraPos: { x: 0, y: 15, z: 12 },
                     loop: true
                 },
-                'LAO45-CRAN30': {
-                    type: 'frames',
-                    frames: [
-                        'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23000"/><text x="200" y="180" fill="%23fff" text-anchor="middle">Frame 1 - Pre-estenosis</text></svg>',
-                        'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23000"/><text x="200" y="180" fill="%23fff" text-anchor="middle">Frame 2 - Estenosis visible</text></svg>',
-                        'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23000"/><text x="200" y="180" fill="%23fff" text-anchor="middle">Frame 3 - Post-estenosis</text></svg>'
-                    ],
-                    description: 'Confirmación en segunda proyección',
-                    cameraPos: { x: -10, y: 12, z: 10 },
-                    fps: 10
+                'AP-CAUD30': {
+                    type: 'video',
+                    video: BASE_VIDEO_URL + VIDEO_FILES['AP-CAUD30'],
+                    description: 'RCA media y distal',
+                    cameraPos: { x: 0, y: -12, z: 15 },
+                    loop: true
+                },
+                'SPIDER': {
+                    type: 'video',
+                    video: BASE_VIDEO_URL + VIDEO_FILES['SPIDER'],
+                    description: 'Vista superior - todas las arterias',
+                    cameraPos: { x: 0, y: 25, z: 0 },
+                    loop: true
+                },
+                'LATERAL': {
+                    type: 'video',
+                    video: BASE_VIDEO_URL + VIDEO_FILES['LATERAL'],
+                    description: 'Vista lateral pura',
+                    cameraPos: { x: 20, y: 0, z: 0 },
+                    loop: true
                 }
             }
+            // Puedes agregar más casos aquí (lad-stenosis, lm-disease, rca-cto)
         };
 
-        let currentFrameIndex = 0;
-        let frameAnimationInterval = null;
+        // ============================================================================
+        // INICIALIZACIÓN DE THREE.JS
+        // ============================================================================
 
         function init() {
             const canvas = document.getElementById('canvas3d');
@@ -685,14 +685,12 @@
             coronaries.add(mesh);
         }
 
+        // ============================================================================
+        // FUNCIÓN PRINCIPAL: CAMBIAR PROYECCIÓN CON VIDEO MP4
+        // ============================================================================
+
         function setProjection(projection) {
             currentProjection = projection;
-            
-            // Detener animación de frames anterior si existe
-            if (frameAnimationInterval) {
-                clearInterval(frameAnimationInterval);
-                frameAnimationInterval = null;
-            }
             
             // Actualizar botones
             document.querySelectorAll('.projection-btn').forEach(btn => {
@@ -712,60 +710,36 @@
                 );
                 camera.lookAt(0, 0, 0);
 
-                let viewerHTML = '';
-
-                // Renderizar según tipo
-                if (projData.type === 'video') {
-                    // VIDEO ANGIOGRÁFICO
-                    viewerHTML = `
-                        <video class="angio-video" id="angioVideo" 
-                               poster="${projData.poster || ''}"
-                               ${projData.loop ? 'loop' : ''} 
-                               controls>
-                            <source src="${projData.video}" type="video/mp4">
-                            Tu navegador no soporta video HTML5
-                        </video>
-                        <div class="video-controls">
-                            <button class="video-btn" onclick="toggleVideo()">▶️</button>
-                            <button class="video-btn" onclick="restartVideo()">⏮️</button>
-                            <button class="video-btn" onclick="slowMotion()">🐌</button>
-                        </div>
-                        <div class="annotation" style="bottom: 80px; left: 50%; transform: translateX(-50%);">
-                            ${projData.description}
-                        </div>
-                    `;
-                } else if (projData.type === 'frames') {
-                    // SECUENCIA DE FRAMES
-                    viewerHTML = `
-                        <img src="${projData.frames[0]}" class="angio-image" id="frameImage">
-                        <div class="video-controls">
-                            <button class="video-btn" onclick="playFrames()">▶️</button>
-                            <button class="video-btn" onclick="stopFrames()">⏸️</button>
-                            <button class="video-btn" onclick="prevFrame()">◀️</button>
-                            <button class="video-btn" onclick="nextFrame()">▶️</button>
-                            <span class="frame-counter" id="frameCounter">1/${projData.frames.length}</span>
-                        </div>
-                        <div class="annotation" style="bottom: 80px; left: 50%; transform: translateX(-50%);">
-                            ${projData.description}
-                        </div>
-                    `;
-                    
-                    // Guardar datos de frames en variable global
-                    window.currentFrames = projData.frames;
-                    window.currentFPS = projData.fps || 15;
-                    currentFrameIndex = 0;
-                    
-                } else {
-                    // IMAGEN ESTÁTICA
-                    viewerHTML = `
-                        <img src="${projData.image}" class="angio-image" alt="${projection}">
-                        <div class="annotation" style="bottom: 20px; left: 50%; transform: translateX(-50%);">
-                            ${projData.description}
-                        </div>
-                    `;
-                }
+                // Renderizar VIDEO MP4 REAL
+                const viewerHTML = `
+                    <video class="angio-video" id="angioVideo" 
+                           ${projData.loop ? 'loop' : ''} 
+                           controls
+                           autoplay
+                           muted
+                           playsinline>
+                        <source src="${projData.video}" type="video/mp4">
+                        Tu navegador no soporta video HTML5
+                    </video>
+                    <div class="video-controls">
+                        <button class="video-btn" onclick="toggleVideo()" title="Play/Pause">▶️</button>
+                        <button class="video-btn" onclick="restartVideo()" title="Reiniciar">⏮️</button>
+                        <button class="video-btn" onclick="slowMotion()" title="Cámara lenta">🐌</button>
+                        <button class="video-btn" onclick="toggleMute()" title="Silenciar/Activar">🔇</button>
+                    </div>
+                    <div class="annotation" style="bottom: 80px; left: 50%; transform: translateX(-50%);">
+                        ${projData.description}
+                    </div>
+                `;
 
                 document.getElementById('angioViewer').innerHTML = viewerHTML;
+
+                // Intentar reproducir automáticamente
+                const video = document.getElementById('angioVideo');
+                video.play().catch(e => {
+                    console.log('Autoplay prevented:', e);
+                    // Navegador bloqueó autoplay, usuario debe hacer clic
+                });
 
                 // Actualizar info de ángulo
                 document.getElementById('angleInfo').textContent = `Vista: ${projection}`;
@@ -786,7 +760,10 @@
             }
         }
 
-        // Funciones de control de VIDEO
+        // ============================================================================
+        // CONTROLES DE VIDEO
+        // ============================================================================
+
         function toggleVideo() {
             const video = document.getElementById('angioVideo');
             if (video) {
@@ -809,52 +786,21 @@
         function slowMotion() {
             const video = document.getElementById('angioVideo');
             if (video) {
-                video.playbackRate = video.playbackRate === 1 ? 0.25 : 1;
+                // Alternar entre velocidad normal (1x) y lenta (0.5x)
+                video.playbackRate = video.playbackRate === 1 ? 0.5 : 1;
             }
         }
 
-        // Funciones de control de FRAMES
-        function playFrames() {
-            if (frameAnimationInterval) return; // Ya está reproduciendo
-            
-            frameAnimationInterval = setInterval(() => {
-                nextFrame();
-            }, 1000 / window.currentFPS);
-        }
-
-        function stopFrames() {
-            if (frameAnimationInterval) {
-                clearInterval(frameAnimationInterval);
-                frameAnimationInterval = null;
+        function toggleMute() {
+            const video = document.getElementById('angioVideo');
+            if (video) {
+                video.muted = !video.muted;
             }
         }
 
-        function nextFrame() {
-            if (!window.currentFrames) return;
-            
-            currentFrameIndex = (currentFrameIndex + 1) % window.currentFrames.length;
-            updateFrame();
-        }
-
-        function prevFrame() {
-            if (!window.currentFrames) return;
-            
-            currentFrameIndex = (currentFrameIndex - 1 + window.currentFrames.length) % window.currentFrames.length;
-            updateFrame();
-        }
-
-        function updateFrame() {
-            const img = document.getElementById('frameImage');
-            const counter = document.getElementById('frameCounter');
-            
-            if (img && window.currentFrames) {
-                img.src = window.currentFrames[currentFrameIndex];
-            }
-            
-            if (counter && window.currentFrames) {
-                counter.textContent = `${currentFrameIndex + 1}/${window.currentFrames.length}`;
-            }
-        }
+        // ============================================================================
+        // OTRAS FUNCIONES DE CONTROL
+        // ============================================================================
 
         function selectCase(caseId) {
             currentCase = caseId;
@@ -934,6 +880,10 @@
             camera.updateProjectionMatrix();
             renderer.setSize(canvas.clientWidth, canvas.clientHeight);
         }
+
+        // ============================================================================
+        // INICIAR APLICACIÓN
+        // ============================================================================
 
         window.addEventListener('load', init);
     </script>
