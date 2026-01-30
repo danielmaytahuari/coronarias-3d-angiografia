@@ -1,0 +1,38 @@
+# Configuración de Netlify para Anatomía Coronaria 3D
+
+[build]
+  # No necesitamos build porque es HTML puro
+  publish = "."
+
+[[headers]]
+  # Aplicar a todos los archivos
+  for = "/*"
+  [headers.values]
+    # Habilitar CORS para videos (si usas CDN externo)
+    Access-Control-Allow-Origin = "*"
+    # Cache para mejorar velocidad
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  # Cache más largo para videos (1 semana)
+  for = "/videos/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  # Cache para frames
+  for = "/frames/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# Redirecciones (opcional)
+[[redirects]]
+  from = "/app"
+  to = "/index.html"
+  status = 200
+
+# Configuración de errores personalizados (opcional)
+# [[redirects]]
+#   from = "/*"
+#   to = "/404.html"
+#   status = 404
