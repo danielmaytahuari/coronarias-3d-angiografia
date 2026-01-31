@@ -43,11 +43,6 @@
             font-size: 0.7rem;
             font-weight: bold;
             margin-left: 5px;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
         }
         .container {
             display: grid;
@@ -93,6 +88,9 @@
             position: relative;
             width: 100%;
             height: 100%;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
         }
         .youtube-wrapper iframe {
             position: absolute;
@@ -101,7 +99,42 @@
             width: 100%;
             height: 100%;
             border: none;
-            border-radius: 8px;
+        }
+        
+        /* Botón de Play sobre el video */
+        .play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 0, 0, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s;
+            border: 4px solid #fff;
+        }
+        .play-overlay:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            background: rgba(255, 0, 0, 1);
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+        }
+        .play-overlay::before {
+            content: '';
+            width: 0;
+            height: 0;
+            border-left: 30px solid white;
+            border-top: 20px solid transparent;
+            border-bottom: 20px solid transparent;
+            margin-left: 8px;
+        }
+        .play-overlay.hidden {
+            display: none;
         }
         
         .placeholder {
@@ -259,19 +292,23 @@
             font-weight: bold;
             animation: pulse 2s infinite;
         }
-        .success-note {
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .instruction-note {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: rgba(0, 255, 0, 0.95);
+            background: rgba(255, 215, 0, 0.95);
             color: #000;
             padding: 12px 20px;
             border-radius: 8px;
             font-size: 0.85rem;
             font-weight: bold;
             z-index: 1000;
-            max-width: 300px;
-            border: 2px solid #00ff00;
+            max-width: 320px;
+            border: 2px solid #ffd700;
             animation: slideIn 0.5s ease-out;
         }
         @keyframes slideIn {
@@ -291,7 +328,7 @@
         <h1>
             Correlación 3D-2D Angiografía Coronaria 
             <span class="premium-badge">🎬 YOUTUBE</span>
-            <span class="youtube-badge">✅ FUNCIONANDO</span>
+            <span class="youtube-badge">✅ CORREGIDO</span>
         </h1>
     </div>
 
@@ -309,8 +346,8 @@
                 <div class="placeholder">
                     <div class="demo-icon">🎬</div>
                     <h3>YouTube Player Listo</h3>
-                    <p>Selecciona una proyección para ver el video correspondiente</p>
-                    <p style="color: #00ff00; font-size: 0.9rem; font-weight: bold;">✅ Videos con Embed Habilitado</p>
+                    <p>Selecciona una proyección</p>
+                    <p style="color: #00ff00; font-size: 0.9rem; font-weight: bold;">✅ Click en PLAY para reproducir</p>
                 </div>
             </div>
         </div>
@@ -320,7 +357,7 @@
                 <h3>📋 Casos Clínicos</h3>
                 <div class="case-option active" onclick="selectCase('normal')">
                     <div class="case-title">Anatomía Normal</div>
-                    <div class="case-desc">Videos de YouTube funcionando al 100%</div>
+                    <div class="case-desc">Videos de YouTube funcionando</div>
                 </div>
             </div>
 
@@ -351,16 +388,17 @@
         </div>
     </div>
 
-    <div class="success-note">
-        ✅ <strong>SISTEMA LISTO</strong><br>
-        Todos los videos funcionando correctamente.<br>
-        <small style="color: #006600;">Embed habilitado ✓</small>
+    <div class="instruction-note">
+        💡 <strong>INSTRUCCIONES</strong><br>
+        1️⃣ Selecciona una proyección<br>
+        2️⃣ Click en ▶️ PLAY para reproducir<br>
+        3️⃣ Los videos son interactivos
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // 🎬 BASE DE DATOS DE VIDEOS YOUTUBE
-        // ✅ ESTOS IDs TIENEN EMBED HABILITADO Y FUNCIONAN
+        // ✅ IDs CON EMBED HABILITADO
         const projectionDatabase = {
             'normal': {
                 'RAO30': { 
@@ -407,6 +445,7 @@
         };
 
         let scene, camera, renderer, coronaries, isRotating = false, currentCase = 'normal';
+        let currentVideoId = null;
 
         function init() {
             const canvas = document.getElementById('canvas3d');
@@ -455,7 +494,7 @@
             });
 
             animate();
-            console.log('✅ Sistema 3D inicializado correctamente');
+            console.log('✅ Sistema 3D inicializado');
         }
 
         function createCoronaryModel() {
@@ -535,51 +574,55 @@
                 return;
             }
 
-            // Actualizar cámara 3D con animación suave
-            const targetPos = data.cam;
-            const currentPos = camera.position;
-            let step = 0;
-            const steps = 30;
-            
-            const animateCamera = () => {
-                if (step < steps) {
-                    step++;
-                    const t = step / steps;
-                    camera.position.x = currentPos.x + (targetPos.x - currentPos.x) * t;
-                    camera.position.y = currentPos.y + (targetPos.y - currentPos.y) * t;
-                    camera.position.z = currentPos.z + (targetPos.z - currentPos.z) * t;
-                    camera.lookAt(0, 0, 0);
-                    requestAnimationFrame(animateCamera);
-                }
-            };
-            animateCamera();
-            
+            // Actualizar cámara 3D
+            camera.position.set(data.cam.x, data.cam.y, data.cam.z);
+            camera.lookAt(0, 0, 0);
             document.getElementById('angleInfo').textContent = `Vista: ${proj}`;
 
             // Cargar video de YouTube
             loadYouTubeVideo(data.youtubeId, data.desc);
             
-            console.log('✅ Proyección cargada:', proj, '| YouTube ID:', data.youtubeId);
+            console.log('✅ Proyección cargada:', proj);
         }
 
         function loadYouTubeVideo(videoId, description) {
             const viewer = document.getElementById('angioViewer');
+            currentVideoId = videoId;
             
-            // Crear iframe de YouTube con autoplay y loop
+            // Crear iframe de YouTube SIN autoplay
             viewer.innerHTML = `
                 <div class="youtube-container">
                     <div class="annotation">${description}</div>
                     <div class="youtube-wrapper">
                         <iframe 
-                            src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=1&modestbranding=1&rel=0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            id="ytplayer"
+                            src="https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1&modestbranding=1&rel=0"
+                            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowfullscreen>
                         </iframe>
+                        <div class="play-overlay" id="playOverlay" onclick="playYouTubeVideo()">
+                        </div>
                     </div>
                 </div>
             `;
             
             console.log('🎬 Video cargado:', videoId);
+        }
+
+        function playYouTubeVideo() {
+            // Ocultar overlay
+            const overlay = document.getElementById('playOverlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+            }
+            
+            // Recargar iframe con autoplay
+            const iframe = document.getElementById('ytplayer');
+            if (iframe && currentVideoId) {
+                iframe.src = `https://www.youtube.com/embed/${currentVideoId}?autoplay=1&mute=1&loop=1&playlist=${currentVideoId}&controls=1&modestbranding=1&rel=0`;
+            }
+            
+            console.log('▶️ Reproduciendo video');
         }
 
         function selectCase(c) { 
@@ -618,9 +661,7 @@
         }
 
         window.addEventListener('load', init);
-        console.log('🎬 Sistema YouTube cargado correctamente');
-        console.log('📊 Videos disponibles:', Object.keys(projectionDatabase.normal).length);
-        console.log('✅ Todos los videos tienen embed habilitado');
+        console.log('🎬 Sistema YouTube cargado - Click en PLAY para reproducir');
     </script>
 </body>
 </html>
