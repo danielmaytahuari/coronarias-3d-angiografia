@@ -502,23 +502,27 @@
         // ============================================================================
         
         // OPCIÓN 1: Usa tu propio repositorio de GitHub
-        const BASE_VIDEO_URL = 'https://raw.githubusercontent.com/danielmaytahuari/coronarias-3d-angiografia/main/videos/';
-        
-        // OPCIÓN 2: Videos de demostración (descomentar para probar)
-        // const BASE_VIDEO_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/';
-        
-        const VIDEO_FILES = {
-            'RAO30': 'rao-30.mp4',
-            'LAO45': 'lao-45.mp4',
-            'LAO60': 'lao-60.mp4',
-            'RAO30-CRAN30': 'rao-30-cran-30.mp4',
-            'LAO45-CRAN30': 'lao-45-cran-30.mp4',
-            'LAO45-CAUD30': 'lao-45-caud-30.mp4',
-            'AP-CRAN30': 'ap-cran-30.mp4',
-            'AP-CAUD30': 'ap-caud-30.mp4',
-            'SPIDER': 'spider-view.mp4',
-            'LATERAL': 'lateral.mp4'
-        };
+       // ============================================================================
+// CONFIGURACIÓN DE VIDEOS - ACTUALIZADO CON TUS ARCHIVOS REALES
+// ============================================================================
+
+const BASE_VIDEO_URL = 'https://raw.githubusercontent.com/danielmaytahuari/coronarias-3d-angiografia/main/videos/';
+
+const VIDEO_FILES = {
+    // Mapeo de proyecciones estándar a tus archivos reales
+    'RAO30': 'RAO28.mp4',                    // RAO ~30°
+    'RAO30-CRAN30': 'RAO29CRA30.mp4',       // RAO ~30° CRAN ~30°
+    'RAO30-CAUD30': 'RAO28CAU31.mp4',       // RAO ~28° CAUD ~31°
+    'LAO45': 'LAO28-RCA.mp4',               // LAO ~28° (cercano a 45°)
+    'LAO45-CRAN30': 'LAO27CRA22-RCA.mp4',   // LAO ~27° CRAN ~22°
+    'LAO45-CAUD30': 'LAO42CAU23.mp4',       // LAO ~42° CAUD ~23°
+    'AP-CRAN30': 'CRA33.mp4',               // Craneal ~33°
+    'AP-CAUD30': 'CAU34.mp4',               // Caudal ~34°
+    'LAO60': 'LAO42CRA23.mp4',              // LAO ~42° (cercano a 60°)
+    'RAO32': 'RAO32.mp4',                    // RAO ~32° alternativo
+    'LATERAL': 'RAO28-RCA.mp4',             // Lateral aproximado
+    'SPIDER': 'CRA33.mp4'                    // Spider view usando craneal
+};
 
         // Para testing rápido, puedes usar un video de prueba conocido:
         const TEST_VIDEO_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
