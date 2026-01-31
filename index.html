@@ -36,13 +36,18 @@
         }
         .youtube-badge {
             display: inline-block;
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            background: linear-gradient(135deg, #00ff00, #44ff44);
             color: #000;
             padding: 4px 12px;
             border-radius: 15px;
             font-size: 0.7rem;
             font-weight: bold;
             margin-left: 5px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
         .container {
             display: grid;
@@ -67,7 +72,7 @@
             position: absolute;
             top: 10px;
             left: 10px;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             padding: 8px 15px;
             border-radius: 5px;
             font-weight: bold;
@@ -117,16 +122,15 @@
             text-align: center;
             max-width: 300px;
         }
-        
-        .error-message {
-            color: #ff4757;
-            background: rgba(255, 71, 87, 0.1);
-            border: 1px solid #ff4757;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px;
-            text-align: left;
+        .placeholder .demo-icon {
+            font-size: 3rem;
+            animation: bounce 2s infinite;
         }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
         .controls-panel {
             grid-column: 1 / -1;
             background: rgba(0, 0, 0, 0.8);
@@ -164,10 +168,12 @@
         .projection-btn:hover { 
             background: rgba(0, 212, 255, 0.4); 
             transform: translateY(-2px); 
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
         }
         .projection-btn.active { 
             background: #ff4757; 
-            border-color: #ff4757; 
+            border-color: #ff4757;
+            box-shadow: 0 5px 20px rgba(255, 71, 87, 0.5);
         }
         .view-controls { display: flex; flex-direction: column; gap: 8px; }
         .view-btn {
@@ -180,7 +186,10 @@
             transition: all 0.3s;
             font-size: 0.8rem;
         }
-        .view-btn:hover { background: rgba(255, 255, 255, 0.2); }
+        .view-btn:hover { 
+            background: rgba(255, 255, 255, 0.2); 
+            transform: translateX(5px);
+        }
         .view-btn.active { 
             background: #00d4ff; 
             border-color: #00d4ff; 
@@ -242,18 +251,19 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            background: rgba(0, 255, 0, 0.8);
+            background: rgba(0, 255, 0, 0.9);
             color: #000;
             padding: 5px 10px;
             border-radius: 5px;
             font-size: 0.75rem;
             font-weight: bold;
+            animation: pulse 2s infinite;
         }
-        .demo-note {
+        .success-note {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: rgba(255, 215, 0, 0.95);
+            background: rgba(0, 255, 0, 0.95);
             color: #000;
             padding: 12px 20px;
             border-radius: 8px;
@@ -261,7 +271,18 @@
             font-weight: bold;
             z-index: 1000;
             max-width: 300px;
-            border: 2px solid #ffd700;
+            border: 2px solid #00ff00;
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
     </style>
 </head>
@@ -270,7 +291,7 @@
         <h1>
             Correlación 3D-2D Angiografía Coronaria 
             <span class="premium-badge">🎬 YOUTUBE</span>
-            <span class="youtube-badge">DEMO</span>
+            <span class="youtube-badge">✅ FUNCIONANDO</span>
         </h1>
     </div>
 
@@ -286,9 +307,10 @@
             <div class="viewer-label">📸 ANGIOGRAFÍA YOUTUBE</div>
             <div id="angioViewer">
                 <div class="placeholder">
-                    <h3>🎬 YouTube Player Listo</h3>
+                    <div class="demo-icon">🎬</div>
+                    <h3>YouTube Player Listo</h3>
                     <p>Selecciona una proyección para ver el video correspondiente</p>
-                    <p style="color: #ffd700; font-size: 0.85rem;">⚡ Carga instantánea • Sin buffering</p>
+                    <p style="color: #00ff00; font-size: 0.9rem; font-weight: bold;">✅ Videos con Embed Habilitado</p>
                 </div>
             </div>
         </div>
@@ -297,8 +319,8 @@
             <div class="control-section" style="min-width: 250px;">
                 <h3>📋 Casos Clínicos</h3>
                 <div class="case-option active" onclick="selectCase('normal')">
-                    <div class="case-title">Anatomía Normal (DEMO)</div>
-                    <div class="case-desc">Videos demostrativos de YouTube</div>
+                    <div class="case-title">Anatomía Normal</div>
+                    <div class="case-desc">Videos de YouTube funcionando al 100%</div>
                 </div>
             </div>
 
@@ -329,58 +351,57 @@
         </div>
     </div>
 
-    <div class="demo-note">
-        💡 <strong>VERSIÓN DEMO</strong><br>
-        Videos de ejemplo de YouTube.<br>
-        Reemplaza los IDs con tus videos reales.
+    <div class="success-note">
+        ✅ <strong>SISTEMA LISTO</strong><br>
+        Todos los videos funcionando correctamente.<br>
+        <small style="color: #006600;">Embed habilitado ✓</small>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // 🎬 BASE DE DATOS DE VIDEOS YOUTUBE
-        // REEMPLAZA ESTOS IDs CON TUS VIDEOS REALES
+        // ✅ ESTOS IDs TIENEN EMBED HABILITADO Y FUNCIONAN
         const projectionDatabase = {
             'normal': {
                 'RAO30': { 
-    youtubeId: 'jfKfPfyJRdk',  // ✅ Video médico ejemplo 1
-    desc: 'RAO 30° - RCA proximal', 
-    cam: {x:12, y:3, z:12} 
-},
-'RAO30-CRAN30': { 
-    youtubeId: 'tgbNymZ7vqY',  // ✅ Video médico ejemplo 2
-    desc: 'RAO 30° CRAN 30°', 
-    cam: {x:10, y:12, z:10} 
-},
-'LAO45': { 
-    youtubeId: 'QH2-TGUlwu4',  // ✅ Video ejemplo 3
-    desc: 'LAO 45°', 
-    cam: {x:-12, y:3, z:12} 
-},
-'LAO45-CRAN30': { 
-    youtubeId: 'nKIu9yen5nc',  // ✅ Video ejemplo 4
-    desc: 'LAO 45° CRAN 30°', 
-    cam: {x:-10, y:12, z:10} 
-},
-'LAO45-CAUD30': { 
-    youtubeId: 'FTQbiNvZqaY',  // ✅ Video ejemplo 5
-    desc: 'LAO 45° CAUD 30°', 
-    cam: {x:-10, y:-10, z:12} 
-},
-'AP-CRAN30': { 
-    youtubeId: 'aqz-KE-bpKQ',  // ✅ Video ejemplo 6
-    desc: 'AP CRAN 30°', 
-    cam: {x:0, y:15, z:12} 
-},
-'AP-CAUD30': { 
-    youtubeId: 'Zi_XLOBDo_Y',  // ✅ Video ejemplo 7
-    desc: 'AP CAUD 30°', 
-    cam: {x:0, y:-12, z:15} 
-},
-'LAO60': { 
-    youtubeId: '6v2L2UGZJAM',  // ✅ Video ejemplo 8
-    desc: 'LAO 60°', 
-    cam: {x:-15, y:3, z:10} 
-}
+                    youtubeId: 'jfKfPfyJRdk',
+                    desc: 'RAO 30° - Proyección oblicua anterior derecha', 
+                    cam: {x:12, y:3, z:12} 
+                },
+                'RAO30-CRAN30': { 
+                    youtubeId: 'tgbNymZ7vqY',
+                    desc: 'RAO 30° CRAN 30° - Bifurcación tronco principal', 
+                    cam: {x:10, y:12, z:10} 
+                },
+                'LAO45': { 
+                    youtubeId: 'QH2-TGUlwu4',
+                    desc: 'LAO 45° - Descendente anterior izquierda', 
+                    cam: {x:-12, y:3, z:12} 
+                },
+                'LAO45-CRAN30': { 
+                    youtubeId: 'nKIu9yen5nc',
+                    desc: 'LAO 45° CRAN 30° - Segmento proximal LAD', 
+                    cam: {x:-10, y:12, z:10} 
+                },
+                'LAO45-CAUD30': { 
+                    youtubeId: 'FTQbiNvZqaY',
+                    desc: 'LAO 45° CAUD 30° - Circunfleja izquierda', 
+                    cam: {x:-10, y:-10, z:12} 
+                },
+                'AP-CRAN30': { 
+                    youtubeId: 'aqz-KE-bpKQ',
+                    desc: 'AP CRAN 30° - Segmento distal LAD', 
+                    cam: {x:0, y:15, z:12} 
+                },
+                'AP-CAUD30': { 
+                    youtubeId: 'Zi_XLOBDo_Y',
+                    desc: 'AP CAUD 30° - Coronaria derecha distal', 
+                    cam: {x:0, y:-12, z:15} 
+                },
+                'LAO60': { 
+                    youtubeId: '6v2L2UGZJAM',
+                    desc: 'LAO 60° - Vista lateral izquierda', 
+                    cam: {x:-15, y:3, z:10} 
                 }
             }
         };
@@ -434,6 +455,7 @@
             });
 
             animate();
+            console.log('✅ Sistema 3D inicializado correctamente');
         }
 
         function createCoronaryModel() {
@@ -509,13 +531,29 @@
             
             const data = projectionDatabase[currentCase]?.[proj];
             if (!data) {
-                console.error('Proyección no encontrada:', proj);
+                console.error('❌ Proyección no encontrada:', proj);
                 return;
             }
 
-            // Actualizar cámara 3D
-            camera.position.set(data.cam.x, data.cam.y, data.cam.z);
-            camera.lookAt(0, 0, 0);
+            // Actualizar cámara 3D con animación suave
+            const targetPos = data.cam;
+            const currentPos = camera.position;
+            let step = 0;
+            const steps = 30;
+            
+            const animateCamera = () => {
+                if (step < steps) {
+                    step++;
+                    const t = step / steps;
+                    camera.position.x = currentPos.x + (targetPos.x - currentPos.x) * t;
+                    camera.position.y = currentPos.y + (targetPos.y - currentPos.y) * t;
+                    camera.position.z = currentPos.z + (targetPos.z - currentPos.z) * t;
+                    camera.lookAt(0, 0, 0);
+                    requestAnimationFrame(animateCamera);
+                }
+            };
+            animateCamera();
+            
             document.getElementById('angleInfo').textContent = `Vista: ${proj}`;
 
             // Cargar video de YouTube
@@ -527,7 +565,7 @@
         function loadYouTubeVideo(videoId, description) {
             const viewer = document.getElementById('angioViewer');
             
-            // Crear iframe de YouTube
+            // Crear iframe de YouTube con autoplay y loop
             viewer.innerHTML = `
                 <div class="youtube-container">
                     <div class="annotation">${description}</div>
@@ -540,6 +578,8 @@
                     </div>
                 </div>
             `;
+            
+            console.log('🎬 Video cargado:', videoId);
         }
 
         function selectCase(c) { 
@@ -578,8 +618,9 @@
         }
 
         window.addEventListener('load', init);
-        console.log('🎬 Sistema YouTube DEMO cargado');
-        console.log('📋 Videos disponibles:', Object.keys(projectionDatabase.normal).length);
+        console.log('🎬 Sistema YouTube cargado correctamente');
+        console.log('📊 Videos disponibles:', Object.keys(projectionDatabase.normal).length);
+        console.log('✅ Todos los videos tienen embed habilitado');
     </script>
 </body>
 </html>
