@@ -158,6 +158,15 @@
             margin-bottom: 10px;
         }
 
+        .error-message {
+            color: #ff4757;
+            background: rgba(255, 71, 87, 0.1);
+            border: 1px solid #ff4757;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px;
+        }
+
         .controls-panel {
             grid-column: 1 / -1;
             background: rgba(0, 0, 0, 0.8);
@@ -310,6 +319,18 @@
             animation: pulse 2s infinite;
         }
 
+        .video-status {
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background: rgba(255, 165, 0, 0.9);
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
@@ -327,6 +348,32 @@
             background: #00d4ff;
             border-radius: 4px;
         }
+
+        .setup-instructions {
+            background: rgba(255, 165, 0, 0.2);
+            border: 2px solid #ffa500;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px;
+            color: #ffa500;
+        }
+
+        .setup-instructions h3 {
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .setup-instructions ol {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        .setup-instructions code {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
     </style>
 </head>
 <body>
@@ -339,6 +386,7 @@
         <div class="viewer-3d">
             <div class="viewer-label">🎯 MODELO 3D</div>
             <div class="sync-indicator" id="syncIndicator">● SINCRONIZADO</div>
+            <div class="video-status" id="videoStatus" style="display: none;">⚠️ Verificando video...</div>
             <canvas id="canvas3d"></canvas>
             <div class="angle-info" id="angleInfo">Vista: Inicial</div>
         </div>
@@ -347,9 +395,28 @@
         <div class="viewer-2d">
             <div class="viewer-label">📸 ANGIOGRAFÍA</div>
             <div id="angioViewer">
-                <div class="placeholder-text">
-                    <h3>Selecciona una proyección angiográfica</h3>
-                    <p>Los videos 2D se sincronizarán automáticamente con el modelo 3D</p>
+                <div class="setup-instructions">
+                    <h3>⚠️ INSTRUCCIONES DE CONFIGURACIÓN</h3>
+                    <p style="margin-bottom: 15px;">Los videos no se reproducen porque las URLs aún no están configuradas. Sigue estos pasos:</p>
+                    <ol>
+                        <li>Sube tus videos MP4 a tu repositorio de GitHub en una carpeta llamada <code>/videos/</code></li>
+                        <li>Asegúrate de que los nombres coincidan:
+                            <ul style="margin-left: 20px; margin-top: 8px;">
+                                <li><code>rao-30.mp4</code></li>
+                                <li><code>lao-45.mp4</code></li>
+                                <li><code>spider-view.mp4</code>, etc.</li>
+                            </ul>
+                        </li>
+                        <li>Actualiza la variable <code>BASE_VIDEO_URL</code> en el código (línea ~273) con la URL de tu repo</li>
+                        <li>O usa videos de ejemplo desde URLs públicas temporales</li>
+                    </ol>
+                    <p style="margin-top: 15px; font-size: 0.85rem;">
+                        <strong>📌 Ejemplo de URL correcta:</strong><br>
+                        <code>https://raw.githubusercontent.com/TU-USUARIO/TU-REPO/main/videos/</code>
+                    </p>
+                    <p style="margin-top: 10px; color: #00d4ff;">
+                        👉 Mientras tanto, puedes probar el modelo 3D interactivo a la izquierda
+                    </p>
                 </div>
             </div>
         </div>
@@ -402,8 +469,8 @@
                     <button class="view-btn" id="btnLCA" onclick="toggleArtery('lca')">Sistema Izquierdo</button>
                     <button class="view-btn" id="btnRCA" onclick="toggleArtery('rca')">Sistema Derecho</button>
                     <button class="view-btn" onclick="toggleHeart()">🫀 Corazón On/Off</button>
-                    <button class="view-btn" onclick="toggleRotation()" id="btnRotate">⏸️ Pausar Rotación</button>
-                    <button class="view-btn" onclick="toggleAnnotations()" id="btnAnnotations">🏷️ Anotaciones</button>
+                    <button class="view-btn" onclick="toggleRotation()" id="btnRotate">▶️ Rotar</button>
+                    <button class="view-btn" onclick="resetCamera()">🎯 Reset Cámara</button>
                 </div>
             </div>
 
@@ -419,6 +486,10 @@
                         <li>Comparación directa anatomía vs imagen</li>
                         <li>Identificación de segmentos arteriales</li>
                     </ul>
+                    <p style="margin-top: 12px; color: #ffa500;">
+                        <strong>⚠️ Estado:</strong> Modelo 3D funcional<br>
+                        Videos: Pendiente de configuración
+                    </p>
                 </div>
             </div>
         </div>
@@ -427,13 +498,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // ============================================================================
-        // CONFIGURACIÓN DE VIDEOS MP4 - AQUÍ PONES TUS URLS DE GITHUB
+        // CONFIGURACIÓN DE VIDEOS - ACTUALIZA ESTA SECCIÓN
         // ============================================================================
         
+        // OPCIÓN 1: Usa tu propio repositorio de GitHub
         const BASE_VIDEO_URL = 'https://raw.githubusercontent.com/danielmaytahuari/coronarias-3d-angiografia/main/videos/';
         
-        // MAPEO DE PROYECCIONES A ARCHIVOS DE VIDEO
-        // Reemplaza estos nombres con los nombres reales de tus archivos MP4
+        // OPCIÓN 2: Videos de demostración (descomentar para probar)
+        // const BASE_VIDEO_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/';
+        
         const VIDEO_FILES = {
             'RAO30': 'rao-30.mp4',
             'LAO45': 'lao-45.mp4',
@@ -447,6 +520,9 @@
             'LATERAL': 'lateral.mp4'
         };
 
+        // Para testing rápido, puedes usar un video de prueba conocido:
+        const TEST_VIDEO_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+
         // ============================================================================
         // VARIABLES GLOBALES
         // ============================================================================
@@ -457,81 +533,79 @@
         let currentProjection = null;
         let showAnnotations = false;
 
-        // Base de datos de proyecciones con URLs reales
         const projectionDatabase = {
             'normal': {
                 'RAO30': {
                     type: 'video',
                     video: BASE_VIDEO_URL + VIDEO_FILES['RAO30'],
-                    description: 'Visualiza RCA proximal y media, bifurcación LAD/Cx',
+                    description: 'RAO 30° - Visualiza RCA proximal y media, bifurcación LAD/Cx',
                     cameraPos: { x: 12, y: 3, z: 12 },
                     loop: true
                 },
                 'LAO45': {
                     type: 'video',
                     video: BASE_VIDEO_URL + VIDEO_FILES['LAO45'],
-                    description: 'LAD completa sin sobreposición',
+                    description: 'LAO 45° - LAD completa sin sobreposición',
                     cameraPos: { x: -12, y: 3, z: 12 },
                     loop: true
                 },
                 'LAO60': {
                     type: 'video',
                     video: BASE_VIDEO_URL + VIDEO_FILES['LAO60'],
-                    description: 'Separación óptima LAD y diagonales',
+                    description: 'LAO 60° - Separación óptima LAD y diagonales',
                     cameraPos: { x: -15, y: 3, z: 10 },
                     loop: true
                 },
                 'RAO30-CRAN30': {
                     type: 'video',
                     video: BASE_VIDEO_URL + VIDEO_FILES['RAO30-CRAN30'],
-                    description: 'Bifurcación tronco común - GOLD STANDARD',
+                    description: 'RAO 30° CRAN 30° - Bifurcación tronco común (GOLD STANDARD)',
                     cameraPos: { x: 10, y: 12, z: 10 },
                     loop: true
                 },
                 'LAO45-CRAN30': {
                     type: 'video',
                     video: BASE_VIDEO_URL + VIDEO_FILES['LAO45-CRAN30'],
-                    description: 'LAD proximal y medio sin foreshortening',
+                    description: 'LAO 45° CRAN 30° - LAD proximal y medio sin foreshortening',
                     cameraPos: { x: -10, y: 12, z: 10 },
                     loop: true
                 },
                 'LAO45-CAUD30': {
                     type: 'video',
                     video: BASE_VIDEO_URL + VIDEO_FILES['LAO45-CAUD30'],
-                    description: 'Visualiza LCx y marginales obtusas',
+                    description: 'LAO 45° CAUD 30° - Visualiza LCx y marginales obtusas',
                     cameraPos: { x: -10, y: -10, z: 12 },
                     loop: true
                 },
                 'AP-CRAN30': {
                     type: 'video',
                     video: BASE_VIDEO_URL + VIDEO_FILES['AP-CRAN30'],
-                    description: 'LAD distal y apex',
+                    description: 'AP CRAN 30° - LAD distal y apex',
                     cameraPos: { x: 0, y: 15, z: 12 },
                     loop: true
                 },
                 'AP-CAUD30': {
                     type: 'video',
                     video: BASE_VIDEO_URL + VIDEO_FILES['AP-CAUD30'],
-                    description: 'RCA media y distal',
+                    description: 'AP CAUD 30° - RCA media y distal',
                     cameraPos: { x: 0, y: -12, z: 15 },
                     loop: true
                 },
                 'SPIDER': {
                     type: 'video',
                     video: BASE_VIDEO_URL + VIDEO_FILES['SPIDER'],
-                    description: 'Vista superior - todas las arterias',
+                    description: 'Spider View - Vista superior de todas las arterias',
                     cameraPos: { x: 0, y: 25, z: 0 },
                     loop: true
                 },
                 'LATERAL': {
                     type: 'video',
                     video: BASE_VIDEO_URL + VIDEO_FILES['LATERAL'],
-                    description: 'Vista lateral pura',
+                    description: 'Vista Lateral - Perfil puro',
                     cameraPos: { x: 20, y: 0, z: 0 },
                     loop: true
                 }
             }
-            // Puedes agregar más casos aquí (lad-stenosis, lm-disease, rca-cto)
         };
 
         // ============================================================================
@@ -605,6 +679,10 @@
                 isDragging = false;
             });
 
+            canvas.addEventListener('mouseleave', () => {
+                isDragging = false;
+            });
+
             canvas.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 camera.position.z += e.deltaY * 0.02;
@@ -629,7 +707,7 @@
             heart.name = 'heartMesh';
             coronaries.add(heart);
 
-            // Sistema izquierdo (LCA)
+            // Sistema izquierdo (LCA) - Rojo
             const lmPoints = [
                 new THREE.Vector3(-1, 3, 2),
                 new THREE.Vector3(-1.5, 2.5, 2.2)
@@ -653,7 +731,7 @@
             ];
             createArtery(lcxPoints, 0.12, 0xff0000, 'lca');
 
-            // Sistema derecho (RCA)
+            // Sistema derecho (RCA) - Azul
             const rcaPoints = [
                 new THREE.Vector3(1, 3, 2),
                 new THREE.Vector3(3, 2, 0.5),
@@ -686,10 +764,19 @@
         }
 
         // ============================================================================
-        // FUNCIÓN PRINCIPAL: CAMBIAR PROYECCIÓN CON VIDEO MP4
+        // FUNCIÓN PRINCIPAL: CAMBIAR PROYECCIÓN CON DETECCIÓN DE ERRORES
         // ============================================================================
 
-        function setProjection(projection) {
+        async function checkVideoExists(url) {
+            try {
+                const response = await fetch(url, { method: 'HEAD' });
+                return response.ok;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        async function setProjection(projection) {
             currentProjection = projection;
             
             // Actualizar botones
@@ -698,10 +785,15 @@
             });
             event.target.classList.add('active');
 
-            // Obtener datos de proyección
             const projData = projectionDatabase[currentCase]?.[projection];
             
             if (projData) {
+                // Mostrar indicador de carga
+                const videoStatus = document.getElementById('videoStatus');
+                videoStatus.style.display = 'block';
+                videoStatus.textContent = '⏳ Cargando video...';
+                videoStatus.style.background = 'rgba(255, 165, 0, 0.9)';
+
                 // Sincronizar cámara 3D
                 camera.position.set(
                     projData.cameraPos.x,
@@ -709,39 +801,62 @@
                     projData.cameraPos.z
                 );
                 camera.lookAt(0, 0, 0);
+                
+                // Verificar si el video existe
+                const videoExists = await checkVideoExists(projData.video);
+                
+                if (videoExists) {
+                    // Video encontrado - renderizar
+                    const viewerHTML = `
+                        <video class="angio-video" id="angioVideo" 
+                               ${projData.loop ? 'loop' : ''} 
+                               controls
+                               autoplay
+                               muted
+                               playsinline
+                               crossorigin="anonymous">
+                            <source src="${projData.video}" type="video/mp4">
+                            Tu navegador no soporta video HTML5
+                        </video>
+                        <div class="video-controls">
+                            <button class="video-btn" onclick="toggleVideo()" title="Play/Pause">▶️</button>
+                            <button class="video-btn" onclick="restartVideo()" title="Reiniciar">⏮️</button>
+                            <button class="video-btn" onclick="slowMotion()" title="Cámara lenta">🐌</button>
+                            <button class="video-btn" onclick="toggleMute()" title="Silenciar">🔇</button>
+                        </div>
+                        <div class="annotation" style="bottom: 80px; left: 50%; transform: translateX(-50%);">
+                            ${projData.description}
+                        </div>
+                    `;
 
-                // Renderizar VIDEO MP4 REAL
-                const viewerHTML = `
-                    <video class="angio-video" id="angioVideo" 
-                           ${projData.loop ? 'loop' : ''} 
-                           controls
-                           autoplay
-                           muted
-                           playsinline>
-                        <source src="${projData.video}" type="video/mp4">
-                        Tu navegador no soporta video HTML5
-                    </video>
-                    <div class="video-controls">
-                        <button class="video-btn" onclick="toggleVideo()" title="Play/Pause">▶️</button>
-                        <button class="video-btn" onclick="restartVideo()" title="Reiniciar">⏮️</button>
-                        <button class="video-btn" onclick="slowMotion()" title="Cámara lenta">🐌</button>
-                        <button class="video-btn" onclick="toggleMute()" title="Silenciar/Activar">🔇</button>
-                    </div>
-                    <div class="annotation" style="bottom: 80px; left: 50%; transform: translateX(-50%);">
-                        ${projData.description}
-                    </div>
-                `;
+                    document.getElementById('angioViewer').innerHTML = viewerHTML;
 
-                document.getElementById('angioViewer').innerHTML = viewerHTML;
+                    const video = document.getElementById('angioVideo');
+                    
+                    video.addEventListener('loadeddata', () => {
+                        videoStatus.textContent = '✅ Video cargado';
+                        videoStatus.style.background = 'rgba(0, 255, 0, 0.9)';
+                        setTimeout(() => {
+                            videoStatus.style.display = 'none';
+                        }, 2000);
+                    });
 
-                // Intentar reproducir automáticamente
-                const video = document.getElementById('angioVideo');
-                video.play().catch(e => {
-                    console.log('Autoplay prevented:', e);
-                    // Navegador bloqueó autoplay, usuario debe hacer clic
-                });
+                    video.addEventListener('error', (e) => {
+                        showVideoError(projection, projData.video);
+                    });
 
-                // Actualizar info de ángulo
+                    // Intentar reproducir
+                    try {
+                        await video.play();
+                    } catch (e) {
+                        console.log('Autoplay bloqueado - el usuario debe hacer clic');
+                    }
+
+                } else {
+                    // Video no encontrado
+                    showVideoError(projection, projData.video);
+                }
+
                 document.getElementById('angleInfo').textContent = `Vista: ${projection}`;
 
                 // Indicador de sincronización
@@ -750,14 +865,35 @@
                 setTimeout(() => {
                     syncIndicator.style.background = 'rgba(0, 255, 0, 0.8)';
                 }, 200);
-            } else {
-                document.getElementById('angioViewer').innerHTML = `
-                    <div class="placeholder-text">
-                        <h3>Proyección no disponible para este caso</h3>
-                        <p>Selecciona otra proyección o caso clínico</p>
-                    </div>
-                `;
             }
+        }
+
+        function showVideoError(projection, videoUrl) {
+            const videoStatus = document.getElementById('videoStatus');
+            videoStatus.textContent = '❌ Video no encontrado';
+            videoStatus.style.background = 'rgba(255, 71, 87, 0.9)';
+            
+            document.getElementById('angioViewer').innerHTML = `
+                <div class="error-message">
+                    <h3>⚠️ Video no disponible: ${projection}</h3>
+                    <p style="margin: 10px 0; font-size: 0.85rem;">
+                        <strong>URL intentada:</strong><br>
+                        <code style="font-size: 0.75rem; word-break: break-all;">${videoUrl}</code>
+                    </p>
+                    <p style="margin-top: 15px; color: #ffa500;">
+                        <strong>Posibles soluciones:</strong>
+                    </p>
+                    <ul style="margin: 10px 0 10px 20px; text-align: left; font-size: 0.85rem;">
+                        <li>Verifica que el archivo <code>${projection.toLowerCase()}.mp4</code> exista en tu repositorio</li>
+                        <li>Asegúrate de que la carpeta sea <code>/videos/</code></li>
+                        <li>Comprueba que la URL de GitHub sea correcta (debe ser raw.githubusercontent.com)</li>
+                        <li>Los archivos deben ser públicos en el repositorio</li>
+                    </ul>
+                    <p style="margin-top: 15px; font-size: 0.85rem;">
+                        <strong>📌 La sincronización 3D sí está funcionando</strong> - El modelo 3D muestra la proyección correcta.
+                    </p>
+                </div>
+            `;
         }
 
         // ============================================================================
@@ -786,7 +922,6 @@
         function slowMotion() {
             const video = document.getElementById('angioVideo');
             if (video) {
-                // Alternar entre velocidad normal (1x) y lenta (0.5x)
                 video.playbackRate = video.playbackRate === 1 ? 0.5 : 1;
             }
         }
@@ -805,13 +940,11 @@
         function selectCase(caseId) {
             currentCase = caseId;
             
-            // Actualizar UI
             document.querySelectorAll('.case-option').forEach(el => {
                 el.classList.remove('active');
             });
             event.target.closest('.case-option').classList.add('active');
 
-            // Limpiar proyección actual
             currentProjection = null;
             document.querySelectorAll('.projection-btn').forEach(btn => {
                 btn.classList.remove('active');
@@ -819,7 +952,7 @@
             
             document.getElementById('angioViewer').innerHTML = `
                 <div class="placeholder-text">
-                    <h3>Caso: ${caseId}</h3>
+                    <h3>Caso seleccionado: ${caseId}</h3>
                     <p>Selecciona una proyección angiográfica</p>
                 </div>
             `;
@@ -858,10 +991,10 @@
             document.getElementById('btnRotate').textContent = isRotating ? '⏸️ Pausar' : '▶️ Rotar';
         }
 
-        function toggleAnnotations() {
-            showAnnotations = !showAnnotations;
-            document.getElementById('btnAnnotations').textContent = 
-                showAnnotations ? '🏷️ Ocultar' : '🏷️ Anotaciones';
+        function resetCamera() {
+            camera.position.set(0, 8, 20);
+            camera.lookAt(0, 0, 0);
+            coronaries.rotation.set(0, 0, 0);
         }
 
         function animate() {
@@ -886,6 +1019,11 @@
         // ============================================================================
 
         window.addEventListener('load', init);
+
+        // Log de diagnóstico
+        console.log('%c🏥 Sistema de Angiografía 3D-2D Cargado', 'color: #00d4ff; font-size: 16px; font-weight: bold;');
+        console.log('Base URL de videos:', BASE_VIDEO_URL);
+        console.log('Archivos de video configurados:', VIDEO_FILES);
     </script>
 </body>
 </html>
