@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Avanzado de Radiología Intervencionista 3D</title>
+    <title>Simulador de Angiógrafo - Sistema de Hemodinamia</title>
     <style>
         * {
             margin: 0;
@@ -13,383 +13,784 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            background: #000;
             color: #fff;
             overflow: hidden;
+            user-select: none;
         }
 
-        .header {
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px 20px;
+        .system-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Header del Sistema */
+        .system-header {
+            background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            backdrop-filter: blur(10px);
             border-bottom: 2px solid #00d4ff;
             z-index: 1000;
         }
 
-        .header-left h1 {
-            font-size: 1.5rem;
-            color: #00d4ff;
-            margin-bottom: 3px;
-        }
-
-        .header-left p {
-            font-size: 0.8rem;
-            color: #a0a0a0;
-        }
-
-        .header-right {
+        .system-logo {
             display: flex;
-            gap: 10px;
+            align-items: center;
+            gap: 15px;
         }
 
-        .header-btn {
-            padding: 8px 15px;
-            background: rgba(0, 212, 255, 0.2);
-            border: 1px solid #00d4ff;
+        .system-logo h1 {
+            font-size: 1.3rem;
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        .system-logo .subtitle {
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        .system-status {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 12px;
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 5px;
-            color: #00d4ff;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
 
-        .header-btn:hover {
-            background: #00d4ff;
-            color: #000;
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+            animation: pulse-indicator 2s infinite;
         }
 
-        .main-container {
+        @keyframes pulse-indicator {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-indicator.warning {
+            background: #ffaa00;
+            box-shadow: 0 0 10px #ffaa00;
+        }
+
+        /* Área Principal */
+        .main-workspace {
             display: flex;
-            height: calc(100vh - 70px);
-        }
-
-        .sidebar-left {
-            width: 280px;
-            background: rgba(0, 0, 0, 0.85);
-            padding: 15px;
-            overflow-y: auto;
-            border-right: 2px solid #00d4ff;
-        }
-
-        .viewer-container {
             flex: 1;
+            overflow: hidden;
+        }
+
+        /* Monitor Principal */
+        .main-monitor {
+            flex: 1;
+            background: #0a0a0a;
             position: relative;
             display: flex;
             flex-direction: column;
         }
 
-        .viewer-main {
+        .monitor-display {
             flex: 1;
             position: relative;
-            background: rgba(0, 0, 0, 0.3);
+            background: #000;
+            border: 2px solid #333;
         }
 
-        #canvas3d {
+        #fluoroscopyCanvas {
             width: 100%;
             height: 100%;
             display: block;
         }
 
-        .bottom-panel {
-            height: 200px;
-            background: rgba(0, 0, 0, 0.9);
-            border-top: 2px solid #00d4ff;
-            display: flex;
-            overflow-x: auto;
+        /* Overlay de información en pantalla */
+        .fluoro-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 10;
         }
 
-        .angiography-view {
-            min-width: 250px;
-            padding: 10px;
-            border-right: 1px solid #333;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .angiography-view:hover {
-            background: rgba(0, 212, 255, 0.1);
-        }
-
-        .angiography-view img {
-            width: 100%;
-            height: 130px;
-            object-fit: cover;
-            border-radius: 5px;
-            border: 2px solid #00d4ff;
-        }
-
-        .angiography-view p {
-            text-align: center;
-            margin-top: 8px;
-            font-size: 0.85rem;
-            color: #00d4ff;
-        }
-
-        .sidebar-right {
-            width: 320px;
-            background: rgba(0, 0, 0, 0.85);
-            padding: 15px;
-            overflow-y: auto;
-            border-left: 2px solid #00d4ff;
-        }
-
-        .control-panel {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #00d4ff;
-        }
-
-        .control-panel h3 {
-            color: #00d4ff;
-            margin-bottom: 12px;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
-            color: #000;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-            font-size: 0.85rem;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
-        }
-
-        .btn.active {
-            background: linear-gradient(135deg, #ff4757 0%, #cc3344 100%);
-            color: #fff;
-        }
-
-        .btn-small {
-            width: calc(50% - 4px);
-            display: inline-block;
-            margin-right: 8px;
-            margin-bottom: 8px;
-        }
-
-        .btn-small:nth-child(2n) {
-            margin-right: 0;
-        }
-
-        .slider-control {
-            margin-bottom: 15px;
-        }
-
-        .slider-control label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 0.85rem;
-            color: #a0a0a0;
-        }
-
-        .slider-control input[type="range"] {
-            width: 100%;
-            height: 5px;
-            border-radius: 5px;
-            background: #333;
-            outline: none;
-        }
-
-        .slider-control input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            background: #00d4ff;
-            cursor: pointer;
-        }
-
-        .slider-value {
-            display: inline-block;
-            float: right;
-            color: #00d4ff;
-            font-weight: bold;
-        }
-
-        .info-card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            border-left: 3px solid #00d4ff;
-        }
-
-        .info-card h4 {
-            color: #00d4ff;
-            margin-bottom: 6px;
-            font-size: 0.9rem;
-        }
-
-        .info-card p {
-            font-size: 0.8rem;
-            line-height: 1.4;
-            color: #d0d0d0;
-        }
-
-        .info-card ul {
-            margin-left: 15px;
-            margin-top: 6px;
-            font-size: 0.8rem;
-        }
-
-        .measurements-list {
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-
-        .measurement-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            border-bottom: 1px solid #333;
-            font-size: 0.8rem;
-        }
-
-        .measurement-item:last-child {
-            border-bottom: none;
-        }
-
-        .catheter-controls {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .catheter-btn {
-            flex: 1;
-            padding: 8px;
-            background: rgba(255, 170, 0, 0.2);
-            border: 1px solid #ffaa00;
-            border-radius: 5px;
-            color: #ffaa00;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.75rem;
-        }
-
-        .catheter-btn:hover {
-            background: #ffaa00;
-            color: #000;
-        }
-
-        .catheter-btn.active {
-            background: #ffaa00;
-            color: #000;
-        }
-
-        .top-controls {
+        .overlay-top {
             position: absolute;
             top: 15px;
             left: 15px;
             right: 15px;
             display: flex;
             justify-content: space-between;
-            z-index: 100;
-            pointer-events: none;
         }
 
-        .top-controls > div {
-            pointer-events: all;
+        .overlay-bottom {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
         }
 
-        .info-overlay {
+        .info-panel {
             background: rgba(0, 0, 0, 0.8);
-            padding: 12px 15px;
-            border-radius: 8px;
+            padding: 10px 15px;
+            border-radius: 5px;
             border: 1px solid #00d4ff;
-            backdrop-filter: blur(10px);
-        }
-
-        .info-overlay-right {
-            text-align: right;
-        }
-
-        .info-overlay p {
             font-size: 0.85rem;
-            margin-bottom: 3px;
-            color: #d0d0d0;
+            line-height: 1.6;
         }
 
-        .info-overlay .highlight {
+        .info-panel .label {
             color: #00d4ff;
             font-weight: bold;
         }
 
-        .center-crosshair {
+        .info-panel .value {
+            color: #fff;
+            margin-left: 8px;
+        }
+
+        /* Crosshair y marcadores */
+        .crosshair-center {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 30px;
-            height: 30px;
-            border: 2px solid #00d4ff;
-            border-radius: 50%;
+            width: 40px;
+            height: 40px;
             pointer-events: none;
-            opacity: 0.5;
         }
 
-        .center-crosshair::before,
-        .center-crosshair::after {
+        .crosshair-center::before,
+        .crosshair-center::after {
             content: '';
             position: absolute;
+            background: #00ff00;
+            opacity: 0.6;
+        }
+
+        .crosshair-center::before {
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+        }
+
+        .crosshair-center::after {
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+        }
+
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, rgba(0, 212, 255, 0.1) 0px, transparent 1px, transparent 50px, rgba(0, 212, 255, 0.1) 51px),
+                repeating-linear-gradient(90deg, rgba(0, 212, 255, 0.1) 0px, transparent 1px, transparent 50px, rgba(0, 212, 255, 0.1) 51px);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .grid-overlay.visible {
+            opacity: 1;
+        }
+
+        /* Medidores de radiación */
+        .radiation-meters {
+            position: absolute;
+            bottom: 80px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ff4757;
+        }
+
+        .meter-item {
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+        }
+
+        .meter-label {
+            color: #ffaa00;
+            margin-bottom: 3px;
+        }
+
+        .meter-bar {
+            width: 150px;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00 0%, #ffaa00 50%, #ff4757 100%);
+            transition: width 0.3s;
+        }
+
+        /* Panel de Control Lateral */
+        .control-panel {
+            width: 380px;
+            background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+            border-left: 2px solid #333;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .control-section {
+            padding: 15px;
+            border-bottom: 1px solid #333;
+        }
+
+        .control-section h3 {
+            color: #00d4ff;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Controles de Angulación */
+        .gantry-control {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .angle-display {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+        }
+
+        .angle-value {
+            text-align: center;
+        }
+
+        .angle-label {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .angle-number {
+            font-size: 1.8rem;
+            color: #00d4ff;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .angle-unit {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        /* Joystick Virtual */
+        .joystick-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .joystick {
+            flex: 1;
+            position: relative;
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle, #2a2a2a 0%, #1a1a1a 100%);
+            border-radius: 50%;
+            border: 3px solid #333;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .joystick-label {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 8px;
+        }
+
+        .joystick-handle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: grab;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+            border: 2px solid #00ffff;
+        }
+
+        .joystick-handle:active {
+            cursor: grabbing;
+        }
+
+        .joystick-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: #ff4757;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Direcciones del joystick */
+        .joystick-directions {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .direction-label {
+            position: absolute;
+            font-size: 0.7rem;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .dir-up { top: 5px; left: 50%; transform: translateX(-50%); }
+        .dir-down { bottom: 5px; left: 50%; transform: translateX(-50%); }
+        .dir-left { left: 5px; top: 50%; transform: translateY(-50%); }
+        .dir-right { right: 5px; top: 50%; transform: translateY(-50%); }
+
+        /* Botones de Control */
+        .control-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .control-btn {
+            padding: 12px;
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            border: 2px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .control-btn:hover {
+            border-color: #00d4ff;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .control-btn.active {
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: #000;
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .control-btn.danger {
+            border-color: #ff4757;
+        }
+
+        .control-btn.danger:hover {
+            background: linear-gradient(135deg, #ff4757 0%, #cc3344 100%);
+            border-color: #ff6677;
+        }
+
+        .control-btn.success {
+            border-color: #00ff88;
+        }
+
+        .control-btn.success:hover {
+            background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+        }
+
+        /* Sliders de Parámetros */
+        .parameter-control {
+            margin-bottom: 15px;
+        }
+
+        .parameter-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .parameter-label {
+            color: #aaa;
+        }
+
+        .parameter-value {
+            color: #00d4ff;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .parameter-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #333;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .parameter-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        .parameter-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            cursor: pointer;
+            border: none;
+        }
+
+        /* Presets de Vistas */
+        .view-presets {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .preset-btn {
+            padding: 10px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid #00d4ff;
+            border-radius: 5px;
+            color: #00d4ff;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .preset-btn:hover {
+            background: #00d4ff;
+            color: #000;
+            transform: scale(1.05);
+        }
+
+        .preset-btn.active {
+            background: #00d4ff;
+            color: #000;
+        }
+
+        /* Modo de Adquisición */
+        .acquisition-mode {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 15px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #444;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .mode-btn .icon {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .mode-btn .label {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        .mode-btn:hover {
+            border-color: #00d4ff;
+        }
+
+        .mode-btn.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+        }
+
+        .mode-btn.active .label {
+            color: #00d4ff;
+        }
+
+        /* Panel de Información del Paciente */
+        .patient-info {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 12px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        .patient-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+
+        .patient-info-label {
+            color: #666;
+        }
+
+        .patient-info-value {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* Indicadores de Dosis */
+        .dose-indicators {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .dose-card {
+            background: rgba(255, 170, 0, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ffaa00;
+            text-align: center;
+        }
+
+        .dose-label {
+            font-size: 0.7rem;
+            color: #ffaa00;
+            margin-bottom: 5px;
+        }
+
+        .dose-value {
+            font-size: 1.2rem;
+            color: #fff;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .dose-unit {
+            font-size: 0.7rem;
+            color: #888;
+            margin-left: 3px;
+        }
+
+        /* Panel de Colimación */
+        .collimation-control {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .collimation-slider {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .collimation-label {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        /* Pedal Virtual */
+        .pedal-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        .pedal {
+            flex: 1;
+            padding: 20px;
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            border: 3px solid #444;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.1s;
+            text-align: center;
+            position: relative;
+        }
+
+        .pedal:active {
+            transform: translateY(5px);
+            box-shadow: inset 0 5px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .pedal.fluoro {
+            border-color: #ffaa00;
+        }
+
+        .pedal.fluoro.active {
+            background: linear-gradient(135deg, #ffaa00 0%, #ff8800 100%);
+            box-shadow: 0 0 30px rgba(255, 170, 0, 0.8);
+        }
+
+        .pedal.cine {
+            border-color: #ff4757;
+        }
+
+        .pedal.cine.active {
+            background: linear-gradient(135deg, #ff4757 0%, #cc3344 100%);
+            box-shadow: 0 0 30px rgba(255, 71, 87, 0.8);
+        }
+
+        .pedal-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .pedal-label {
+            font-size: 0.85rem;
+            color: #888;
+            font-weight: 600;
+        }
+
+        .pedal.active .pedal-label {
+            color: #fff;
+        }
+
+        /* Scrollbar personalizado */
+        .control-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .control-panel::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        .control-panel::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .control-panel::-webkit-scrollbar-thumb:hover {
             background: #00d4ff;
         }
 
-        .center-crosshair::before {
-            top: 50%;
-            left: 10%;
-            right: 10%;
-            height: 2px;
-            transform: translateY(-50%);
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
         }
 
-        .center-crosshair::after {
-            left: 50%;
-            top: 10%;
-            bottom: 10%;
-            width: 2px;
-            transform: translateX(-50%);
-        }
-
-        .loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+        .quick-btn {
+            flex: 1;
+            padding: 10px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid #00d4ff;
+            border-radius: 5px;
+            color: #00d4ff;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
             text-align: center;
-            z-index: 1000;
+        }
+
+        .quick-btn:hover {
+            background: #00d4ff;
+            color: #000;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .control-panel {
+                width: 320px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .main-workspace {
+                flex-direction: column;
+            }
+            
+            .control-panel {
+                width: 100%;
+                max-height: 400px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading-system {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
         }
 
         .loading-spinner {
-            border: 4px solid rgba(255, 255, 255, 0.1);
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(0, 212, 255, 0.1);
             border-top: 4px solid #00d4ff;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+            margin-bottom: 20px;
         }
 
         @keyframes spin {
@@ -397,699 +798,501 @@
             100% { transform: rotate(360deg); }
         }
 
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: rgba(20, 20, 20, 0.95);
-            padding: 30px;
-            border-radius: 10px;
-            border: 2px solid #00d4ff;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal-content h2 {
+        .loading-text {
             color: #00d4ff;
-            margin-bottom: 20px;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
         }
 
-        .modal-close {
-            float: right;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #ff4757;
-        }
-
-        .stenosis-marker {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background: #ff4757;
-            border: 2px solid #fff;
-            border-radius: 50%;
-            cursor: pointer;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-        }
-
-        .legend {
-            background: rgba(0, 0, 0, 0.6);
-            padding: 12px;
-            border-radius: 5px;
-            margin-top: 15px;
-        }
-
-        .legend h4 {
-            color: #00d4ff;
-            margin-bottom: 8px;
+        .loading-subtext {
+            color: #666;
             font-size: 0.9rem;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-
-        .legend-color {
-            width: 25px;
-            height: 12px;
-            border-radius: 3px;
-            margin-right: 8px;
-        }
-
-        .legend-text {
-            font-size: 0.75rem;
-            color: #d0d0d0;
-        }
-
-        .checkbox-group {
-            margin: 10px 0;
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-            cursor: pointer;
-        }
-
-        .checkbox-item input[type="checkbox"] {
-            margin-right: 8px;
-            cursor: pointer;
-        }
-
-        .checkbox-item label {
-            font-size: 0.85rem;
-            color: #d0d0d0;
-            cursor: pointer;
-        }
-
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.3);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #00d4ff;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #0099cc;
-        }
-
-        .color-picker-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .color-option {
-            width: 30px;
-            height: 30px;
-            border-radius: 5px;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.3s;
-        }
-
-        .color-option:hover {
-            border-color: #fff;
-            transform: scale(1.1);
-        }
-
-        .color-option.active {
-            border-color: #00d4ff;
-            box-shadow: 0 0 10px #00d4ff;
-        }
-
-        @media (max-width: 1200px) {
-            .sidebar-left, .sidebar-right {
-                width: 250px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .main-container {
-                flex-direction: column;
-            }
-            
-            .sidebar-left, .sidebar-right {
-                width: 100%;
-                height: auto;
-                max-height: 200px;
-            }
-            
-            .bottom-panel {
-                height: 150px;
-            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-left">
-            <h1>🫀 Sistema Avanzado de Radiología Intervencionista 3D</h1>
-            <p>Hospital Alberto Sabogal Sologuren - EsSalud | Servicio de Hemodinamia</p>
-        </div>
-        <div class="header-right">
-            <button class="header-btn" onclick="exportImage()">📸 Capturar</button>
-            <button class="header-btn" onclick="toggleFullscreen()">⛶ Pantalla Completa</button>
-            <button class="header-btn" onclick="showHelp()">❓ Ayuda</button>
-        </div>
+    <div class="loading-system" id="loadingSystem">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Iniciando Sistema de Hemodinamia</div>
+        <div class="loading-subtext">Calibrando angiógrafo...</div>
     </div>
 
-    <div class="main-container">
-        <!-- Sidebar Izquierdo -->
-        <div class="sidebar-left">
-            <div class="control-panel">
-                <h3>🎯 Vistas Angiográficas</h3>
-                <button class="btn btn-small" onclick="setAngiographicView('RAO30')">RAO 30°</button>
-                <button class="btn btn-small" onclick="setAngiographicView('LAO45')">LAO 45°</button>
-                <button class="btn btn-small" onclick="setAngiographicView('RAO30_CRAN')">RAO 30° Cran</button>
-                <button class="btn btn-small" onclick="setAngiographicView('LAO45_CRAN')">LAO 45° Cran</button>
-                <button class="btn btn-small" onclick="setAngiographicView('RAO30_CAUD')">RAO 30° Caud</button>
-                <button class="btn btn-small" onclick="setAngiographicView('LAO45_CAUD')">LAO 45° Caud</button>
-                <button class="btn btn-small" onclick="setAngiographicView('AP_CRAN')">AP Craneal</button>
-                <button class="btn btn-small" onclick="setAngiographicView('AP_CAUD')">AP Caudal</button>
-                <button class="btn btn-small" onclick="setAngiographicView('LATERAL')">Lateral</button>
-                <button class="btn btn-small" onclick="setAngiographicView('SPIDER')">Spider</button>
-            </div>
-
-            <div class="control-panel">
-                <h3>🔍 Visualización</h3>
-                <button class="btn active" id="btnAll" onclick="toggleArteryVisibility('all')">Todas las Arterias</button>
-                <button class="btn" id="btnLCA" onclick="toggleArteryVisibility('lca')">Coronaria Izquierda</button>
-                <button class="btn" id="btnRCA" onclick="toggleArteryVisibility('rca')">Coronaria Derecha</button>
-                
-                <div class="checkbox-group">
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="chkLabels" checked onchange="toggleLabels()">
-                        <label for="chkLabels">Mostrar Etiquetas</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="chkHeart" checked onchange="toggleHeart()">
-                        <label for="chkHeart">Mostrar Corazón</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="chkGrid" onchange="toggleGrid()">
-                        <label for="chkGrid">Mostrar Cuadrícula</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="chkStenosis" onchange="toggleStenosis()">
-                        <label for="chkStenosis">Mostrar Estenosis</label>
-                    </div>
+    <div class="system-container">
+        <!-- Header del Sistema -->
+        <div class="system-header">
+            <div class="system-logo">
+                <div>
+                    <h1>⚕️ SIMULADOR ANGIÓGRAFO</h1>
+                    <div class="subtitle">Hospital Alberto Sabogal Sologuren - Servicio de Hemodinamia</div>
                 </div>
             </div>
-
-            <div class="control-panel">
-                <h3>⚙️ Controles</h3>
-                <button class="btn" onclick="resetView()">🔄 Restablecer Vista</button>
-                <button class="btn" onclick="toggleRotation()" id="btnRotation">⏸️ Pausar Rotación</button>
-                <button class="btn" onclick="toggleMeasurement()">📏 Modo Medición</button>
-            </div>
-
-            <div class="legend">
-                <h4>Leyenda de Colores</h4>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #ff4444;"></div>
-                    <div class="legend-text">Tronco y LAD</div>
+            <div class="system-status">
+                <div class="status-item">
+                    <div class="status-indicator"></div>
+                    <span>Sistema Activo</span>
                 </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #ff6666;"></div>
-                    <div class="legend-text">Circunfleja (LCx)</div>
+                <div class="status-item">
+                    <div class="status-indicator warning"></div>
+                    <span>Modo Simulación</span>
                 </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #4444ff;"></div>
-                    <div class="legend-text">Coronaria Derecha</div>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #ffaa00;"></div>
-                    <div class="legend-text">Diagonales</div>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #00ff88;"></div>
-                    <div class="legend-text">Marginales</div>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #ff4757;"></div>
-                    <div class="legend-text">Estenosis</div>
+                <div class="status-item">
+                    <span id="systemTime">--:--:--</span>
                 </div>
             </div>
         </div>
 
-        <!-- Área Principal -->
-        <div class="viewer-container">
-            <div class="viewer-main">
-                <div class="loading" id="loading">
-                    <div class="loading-spinner"></div>
-                    <p>Cargando sistema 3D avanzado...</p>
+        <!-- Área de Trabajo Principal -->
+        <div class="main-workspace">
+            <!-- Monitor Principal -->
+            <div class="main-monitor">
+                <div class="monitor-display">
+                    <canvas id="fluoroscopyCanvas"></canvas>
+                    
+                    <!-- Overlay de Información -->
+                    <div class="fluoro-overlay">
+                        <div class="overlay-top">
+                            <div class="info-panel">
+                                <div><span class="label">PACIENTE:</span><span class="value" id="patientName">SIMULACIÓN</span></div>
+                                <div><span class="label">ESTUDIO:</span><span class="value" id="studyType">CORONARIOGRAFÍA</span></div>
+                                <div><span class="label">PROTOCOLO:</span><span class="value" id="protocol">ESTÁNDAR</span></div>
+                            </div>
+                            
+                            <div class="info-panel">
+                                <div><span class="label">kV:</span><span class="value" id="displayKv">75</span></div>
+                                <div><span class="label">mA:</span><span class="value" id="displayMa">800</span></div>
+                                <div><span class="label">FPS:</span><span class="value" id="displayFps">15</span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="overlay-bottom">
+                            <div class="info-panel">
+                                <div><span class="label">RAO/LAO:</span><span class="value" id="displayRao">0.0°</span></div>
+                                <div><span class="label">CRAN/CAUD:</span><span class="value" id="displayCran">0.0°</span></div>
+                                <div><span class="label">SID:</span><span class="value">100 cm</span></div>
+                            </div>
+                            
+                            <div class="info-panel">
+                                <div><span class="label">ZOOM:</span><span class="value" id="displayZoom">100%</span></div>
+                                <div><span class="label">FILTRO:</span><span class="value" id="displayFilter">NINGUNO</span></div>
+                                <div><span class="label">MODO:</span><span class="value" id="displayMode">ESPERA</span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="crosshair-center"></div>
+                        <div class="grid-overlay" id="gridOverlay"></div>
+                    </div>
+
+                    <!-- Medidores de Radiación -->
+                    <div class="radiation-meters">
+                        <div class="meter-item">
+                            <div class="meter-label">DOSIS ACUMULADA</div>
+                            <div class="meter-bar">
+                                <div class="meter-fill" id="doseMeter" style="width: 0%"></div>
+                            </div>
+                            <div style="font-size: 0.75rem; color: #fff; margin-top: 3px;">
+                                <span id="doseValue">0</span> mGy
+                            </div>
+                        </div>
+                        <div class="meter-item">
+                            <div class="meter-label">TIEMPO FLUOROSCOPIA</div>
+                            <div class="meter-bar">
+                                <div class="meter-fill" id="timeMeter" style="width: 0%; background: #00d4ff;"></div>
+                            </div>
+                            <div style="font-size: 0.75rem; color: #fff; margin-top: 3px;">
+                                <span id="fluoTime">00:00</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <canvas id="canvas3d"></canvas>
-                
-                <div class="top-controls">
-                    <div class="info-overlay">
-                        <p><span class="highlight">Vista:</span> <span id="currentView">Frontal</span></p>
-                        <p><span class="highlight">Rotación:</span> <span id="rotationAngle">0°</span></p>
-                        <p><span class="highlight">Zoom:</span> <span id="zoomLevel">100%</span></p>
+            </div>
+
+            <!-- Panel de Control -->
+            <div class="control-panel">
+                <!-- Control de Angulación -->
+                <div class="control-section">
+                    <h3>🎯 Control de Angulación</h3>
+                    <div class="gantry-control">
+                        <div class="angle-display">
+                            <div class="angle-value">
+                                <div class="angle-label">RAO/LAO</div>
+                                <div>
+                                    <span class="angle-number" id="raoValue">0.0</span>
+                                    <span class="angle-unit">°</span>
+                                </div>
+                            </div>
+                            <div class="angle-value">
+                                <div class="angle-label">CRAN/CAUD</div>
+                                <div>
+                                    <span class="angle-number" id="cranValue">0.0</span>
+                                    <span class="angle-unit">°</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="joystick-container">
+                            <div>
+                                <div class="joystick" id="joystickRAO">
+                                    <div class="joystick-directions">
+                                        <span class="direction-label dir-up">LAO</span>
+                                        <span class="direction-label dir-down">RAO</span>
+                                    </div>
+                                    <div class="joystick-center"></div>
+                                    <div class="joystick-handle" id="handleRAO"></div>
+                                </div>
+                                <div class="joystick-label">RAO/LAO</div>
+                            </div>
+                            
+                            <div>
+                                <div class="joystick" id="joystickCRAN">
+                                    <div class="joystick-directions">
+                                        <span class="direction-label dir-up">CRAN</span>
+                                        <span class="direction-label dir-down">CAUD</span>
+                                    </div>
+                                    <div class="joystick-center"></div>
+                                    <div class="joystick-handle" id="handleCRAN"></div>
+                                </div>
+                                <div class="joystick-label">CRAN/CAUD</div>
+                            </div>
+                        </div>
+
+                        <div class="control-buttons">
+                            <button class="control-btn" onclick="resetAngles()">🔄 Reset</button>
+                            <button class="control-btn" onclick="parkPosition()">🏠 Park</button>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 20px;">📐 Vistas Predefinidas</h3>
+                    <div class="view-presets">
+                        <button class="preset-btn" onclick="setPresetView('RAO30')">RAO 30°</button>
+                        <button class="preset-btn" onclick="setPresetView('LAO45')">LAO 45°</button>
+                        <button class="preset-btn" onclick="setPresetView('LAO60')">LAO 60°</button>
+                        <button class="preset-btn" onclick="setPresetView('RAO30CRAN')">RAO 30° Cran</button>
+                        <button class="preset-btn" onclick="setPresetView('LAO45CRAN')">LAO 45° Cran</button>
+                        <button class="preset-btn" onclick="setPresetView('APCRAN')">AP Cran 30°</button>
+                        <button class="preset-btn" onclick="setPresetView('RAO30CAUD')">RAO 30° Caud</button>
+                        <button class="preset-btn" onclick="setPresetView('LAO45CAUD')">LAO 45° Caud</button>
+                        <button class="preset-btn" onclick="setPresetView('APCAUD')">AP Caud 30°</button>
+                    </div>
+                </div>
+
+                <!-- Modo de Adquisición -->
+                <div class="control-section">
+                    <h3>📹 Modo de Adquisición</h3>
+                    <div class="acquisition-mode">
+                        <div class="mode-btn" id="modeStandby" onclick="setMode('standby')">
+                            <div class="icon">⏸️</div>
+                            <div class="label">ESPERA</div>
+                        </div>
+                        <div class="mode-btn" id="modeFluoro" onclick="setMode('fluoro')">
+                            <div class="icon">📡</div>
+                            <div class="label">FLUOROSCOPIA</div>
+                        </div>
+                        <div class="mode-btn" id="modeCine" onclick="setMode('cine')">
+                            <div class="icon">🎬</div>
+                            <div class="label">CINE</div>
+                        </div>
+                    </div>
+
+                    <div class="pedal-controls">
+                        <div class="pedal fluoro" id="pedalFluoro">
+                            <div class="pedal-icon">🔦</div>
+                            <div class="pedal-label">FLUORO</div>
+                        </div>
+                        <div class="pedal cine" id="pedalCine">
+                            <div class="pedal-icon">⏺️</div>
+                            <div class="pedal-label">CINE</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parámetros de Exposición -->
+                <div class="control-section">
+                    <h3>⚡ Parámetros de Exposición</h3>
+                    
+                    <div class="parameter-control">
+                        <div class="parameter-header">
+                            <span class="parameter-label">kV (Kilovoltaje)</span>
+                            <span class="parameter-value"><span id="kvValue">75</span> kV</span>
+                        </div>
+                        <input type="range" class="parameter-slider" min="60" max="120" value="75" id="kvSlider" oninput="updateParameter('kv', this.value)">
+                    </div>
+
+                    <div class="parameter-control">
+                        <div class="parameter-header">
+                            <span class="parameter-label">mA (Miliamperaje)</span>
+                            <span class="parameter-value"><span id="maValue">800</span> mA</span>
+                        </div>
+                        <input type="range" class="parameter-slider" min="400" max="1200" value="800" step="50" id="maSlider" oninput="updateParameter('ma', this.value)">
+                    </div>
+
+                    <div class="parameter-control">
+                        <div class="parameter-header">
+                            <span class="parameter-label">FPS (Fotogramas/seg)</span>
+                            <span class="parameter-value"><span id="fpsValue">15</span> fps</span>
+                        </div>
+                        <input type="range" class="parameter-slider" min="7" max="30" value="15" step="1" id="fpsSlider" oninput="updateParameter('fps', this.value)">
+                    </div>
+
+                    <div class="parameter-control">
+                        <div class="parameter-header">
+                            <span class="parameter-label">Zoom Digital</span>
+                            <span class="parameter-value"><span id="zoomValue">100</span>%</span>
+                        </div>
+                        <input type="range" class="parameter-slider" min="100" max="300" value="100" step="10" id="zoomSlider" oninput="updateParameter('zoom', this.value)">
+                    </div>
+
+                    <div class="dose-indicators">
+                        <div class="dose-card">
+                            <div class="dose-label">DOSIS TOTAL</div>
+                            <div>
+                                <span class="dose-value" id="totalDose">0</span>
+                                <span class="dose-unit">mGy</span>
+                            </div>
+                        </div>
+                        <div class="dose-card">
+                            <div class="dose-label">DAP</div>
+                            <div>
+                                <span class="dose-value" id="dapValue">0</span>
+                                <span class="dose-unit">Gy·cm²</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Colimación -->
+                <div class="control-section">
+                    <h3>📏 Colimación</h3>
+                    <div class="collimation-control">
+                        <div class="collimation-slider">
+                            <div class="collimation-label">SUPERIOR</div>
+                            <input type="range" class="parameter-slider" min="0" max="100" value="0" oninput="updateCollimation('top', this.value)">
+                        </div>
+                        <div class="collimation-slider">
+                            <div class="collimation-label">INFERIOR</div>
+                            <input type="range" class="parameter-slider" min="0" max="100" value="0" oninput="updateCollimation('bottom', this.value)">
+                        </div>
+                        <div class="collimation-slider">
+                            <div class="collimation-label">IZQUIERDA</div>
+                            <input type="range" class="parameter-slider" min="0" max="100" value="0" oninput="updateCollimation('left', this.value)">
+                        </div>
+                        <div class="collimation-slider">
+                            <div class="collimation-label">DERECHA</div>
+                            <input type="range" class="parameter-slider" min="0" max="100" value="0" oninput="updateCollimation('right', this.value)">
+                        </div>
                     </div>
                     
-                    <div class="info-overlay info-overlay-right">
-                        <p><span class="highlight">Modo:</span> <span id="currentMode">Visualización</span></p>
-                        <p><span class="highlight">Arterias:</span> <span id="visibleArteries">Todas</span></p>
+                    <div class="control-buttons">
+                        <button class="control-btn" onclick="openCollimation()">⬜ Abrir</button>
+                        <button class="control-btn" onclick="closeCollimation()">⬛ Cerrar</button>
                     </div>
                 </div>
-                
-                <div class="center-crosshair" id="crosshair" style="display: none;"></div>
-            </div>
 
-            <!-- Panel Inferior con Proyecciones Angiográficas -->
-            <div class="bottom-panel">
-                <div class="angiography-view" onclick="setAngiographicView('RAO30')">
-                    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); height: 130px; border-radius: 5px; border: 2px solid #00d4ff; display: flex; align-items: center; justify-content: center;">
-                        <div style="text-align: center;">
-                            <div style="font-size: 2rem;">↗️</div>
-                            <div style="font-size: 0.8rem; color: #00d4ff;">RAO 30°</div>
+                <!-- Herramientas -->
+                <div class="control-section">
+                    <h3>🛠️ Herramientas</h3>
+                    <div class="control-buttons">
+                        <button class="control-btn" onclick="toggleGrid()">
+                            <span>🔲</span> Cuadrícula
+                        </button>
+                        <button class="control-btn" onclick="toggleSubtraction()">
+                            <span>🎭</span> Sustracción
+                        </button>
+                        <button class="control-btn" onclick="enhanceImage()">
+                            <span>✨</span> Realzar
+                        </button>
+                        <button class="control-btn" onclick="invertColors()">
+                            <span>🔄</span> Invertir
+                        </button>
+                        <button class="control-btn" onclick="freezeImage()">
+                            <span>❄️</span> Congelar
+                        </button>
+                        <button class="control-btn" onclick="saveImage()">
+                            <span>💾</span> Guardar
+                        </button>
+                    </div>
+
+                    <div class="quick-actions">
+                        <button class="quick-btn" onclick="lastImageHold()">📸 LIH</button>
+                        <button class="quick-btn" onclick="roadmap()">🗺️ Roadmap</button>
+                        <button class="quick-btn" onclick="stentBoost()">🔍 StentBoost</button>
+                    </div>
+                </div>
+
+                <!-- Info del Paciente -->
+                <div class="control-section">
+                    <h3>👤 Información del Paciente</h3>
+                    <div class="patient-info">
+                        <div class="patient-info-row">
+                            <span class="patient-info-label">Nombre:</span>
+                            <span class="patient-info-value">SIMULACIÓN EDUCATIVA</span>
+                        </div>
+                        <div class="patient-info-row">
+                            <span class="patient-info-label">ID:</span>
+                            <span class="patient-info-value">SIM-2026-001</span>
+                        </div>
+                        <div class="patient-info-row">
+                            <span class="patient-info-label">Edad:</span>
+                            <span class="patient-info-value">-- años</span>
+                        </div>
+                        <div class="patient-info-row">
+                            <span class="patient-info-label">Peso:</span>
+                            <span class="patient-info-value">-- kg</span>
+                        </div>
+                        <div class="patient-info-row">
+                            <span class="patient-info-label">Estudio:</span>
+                            <span class="patient-info-value">CORONARIOGRAFÍA</span>
+                        </div>
+                        <div class="patient-info-row">
+                            <span class="patient-info-label">Fecha:</span>
+                            <span class="patient-info-value" id="studyDate">--/--/----</span>
                         </div>
                     </div>
-                    <p>RAO 30°</p>
-                </div>
-
-                <div class="angiography-view" onclick="setAngiographicView('LAO45')">
-                    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); height: 130px; border-radius: 5px; border: 2px solid #00d4ff; display: flex; align-items: center; justify-content: center;">
-                        <div style="text-align: center;">
-                            <div style="font-size: 2rem;">↖️</div>
-                            <div style="font-size: 0.8rem; color: #00d4ff;">LAO 45°</div>
-                        </div>
-                    </div>
-                    <p>LAO 45°</p>
-                </div>
-
-                <div class="angiography-view" onclick="setAngiographicView('RAO30_CRAN')">
-                    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); height: 130px; border-radius: 5px; border: 2px solid #00d4ff; display: flex; align-items: center; justify-content: center;">
-                        <div style="text-align: center;">
-                            <div style="font-size: 2rem;">⬈</div>
-                            <div style="font-size: 0.8rem; color: #00d4ff;">RAO Craneal</div>
-                        </div>
-                    </div>
-                    <p>RAO 30° Craneal</p>
-                </div>
-
-                <div class="angiography-view" onclick="setAngiographicView('LAO45_CAUD')">
-                    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); height: 130px; border-radius: 5px; border: 2px solid #00d4ff; display: flex; align-items: center; justify-content: center;">
-                        <div style="text-align: center;">
-                            <div style="font-size: 2rem;">⬋</div>
-                            <div style="font-size: 0.8rem; color: #00d4ff;">LAO Caudal</div>
-                        </div>
-                    </div>
-                    <p>LAO 45° Caudal</p>
-                </div>
-
-                <div class="angiography-view" onclick="setAngiographicView('SPIDER')">
-                    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); height: 130px; border-radius: 5px; border: 2px solid #00d4ff; display: flex; align-items: center; justify-content: center;">
-                        <div style="text-align: center;">
-                            <div style="font-size: 2rem;">🕷️</div>
-                            <div style="font-size: 0.8rem; color: #00d4ff;">Spider View</div>
-                        </div>
-                    </div>
-                    <p>Vista Spider</p>
-                </div>
-
-                <div class="angiography-view" onclick="setAngiographicView('AP_CRAN')">
-                    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); height: 130px; border-radius: 5px; border: 2px solid #00d4ff; display: flex; align-items: center; justify-content: center;">
-                        <div style="text-align: center;">
-                            <div style="font-size: 2rem;">⬆️</div>
-                            <div style="font-size: 0.8rem; color: #00d4ff;">AP Craneal</div>
-                        </div>
-                    </div>
-                    <p>AP Craneal</p>
                 </div>
             </div>
-        </div>
-
-        <!-- Sidebar Derecho -->
-        <div class="sidebar-right">
-            <div class="control-panel">
-                <h3>🩺 Simulación de Catéteres</h3>
-                <div class="catheter-controls">
-                    <button class="catheter-btn" onclick="addCatheter('JL4')">JL4</button>
-                    <button class="catheter-btn" onclick="addCatheter('JR4')">JR4</button>
-                    <button class="catheter-btn" onclick="addCatheter('AL1')">AL1</button>
-                </div>
-                <div class="catheter-controls">
-                    <button class="catheter-btn" onclick="addCatheter('EBU')">EBU</button>
-                    <button class="catheter-btn" onclick="addCatheter('MP')">MP</button>
-                    <button class="catheter-btn" onclick="addCatheter('clear')">❌ Limpiar</button>
-                </div>
-                
-                <div class="slider-control">
-                    <label>Avance del Catéter <span class="slider-value" id="catheterProgress">0%</span></label>
-                    <input type="range" min="0" max="100" value="0" id="catheterSlider" oninput="updateCatheterProgress(this.value)">
-                </div>
-            </div>
-
-            <div class="control-panel">
-                <h3>📏 Mediciones</h3>
-                <div class="measurements-list" id="measurementsList">
-                    <p style="text-align: center; color: #666; font-size: 0.8rem;">No hay mediciones</p>
-                </div>
-                <button class="btn" onclick="clearMeasurements()">🗑️ Limpiar Mediciones</button>
-            </div>
-
-            <div class="control-panel">
-                <h3>🎨 Apariencia</h3>
-                <div class="slider-control">
-                    <label>Opacidad Corazón <span class="slider-value" id="heartOpacity">30%</span></label>
-                    <input type="range" min="0" max="100" value="30" oninput="updateHeartOpacity(this.value)">
-                </div>
-                
-                <div class="slider-control">
-                    <label>Grosor Arterias <span class="slider-value" id="arteryThickness">100%</span></label>
-                    <input type="range" min="50" max="200" value="100" oninput="updateArteryThickness(this.value)">
-                </div>
-
-                <label style="display: block; margin: 10px 0 5px 0; font-size: 0.85rem; color: #a0a0a0;">Color de Fondo</label>
-                <div class="color-picker-group">
-                    <div class="color-option active" style="background: #0a0a0a;" onclick="changeBackground('#0a0a0a')"></div>
-                    <div class="color-option" style="background: #1a1a2e;" onclick="changeBackground('#1a1a2e')"></div>
-                    <div class="color-option" style="background: #0f3460;" onclick="changeBackground('#0f3460')"></div>
-                    <div class="color-option" style="background: #16213e;" onclick="changeBackground('#16213e')"></div>
-                    <div class="color-option" style="background: #2c3e50;" onclick="changeBackground('#2c3e50')"></div>
-                </div>
-            </div>
-
-            <div class="control-panel">
-                <h3>📊 Información del Paciente</h3>
-                <div class="info-card">
-                    <h4>Datos de Ejemplo</h4>
-                    <p><strong>Nombre:</strong> Simulación</p>
-                    <p><strong>Edad:</strong> -- años</p>
-                    <p><strong>Indicación:</strong> Educacional</p>
-                    <p><strong>Fecha:</strong> <span id="currentDate"></span></p>
-                </div>
-            </div>
-
-            <div class="info-card" style="background: rgba(255, 170, 0, 0.1); border-left-color: #ffaa00;">
-                <h4>💡 Tips Rápidos</h4>
-                <ul style="font-size: 0.75rem;">
-                    <li>Click + arrastrar para rotar</li>
-                    <li>Scroll para zoom</li>
-                    <li>Doble click para centrar</li>
-                    <li>Click derecho para menú</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Ayuda -->
-    <div class="modal" id="helpModal">
-        <div class="modal-content">
-            <span class="modal-close" onclick="closeModal('helpModal')">&times;</span>
-            <h2>📖 Guía de Uso del Sistema</h2>
-            
-            <h3 style="color: #00d4ff; margin-top: 20px;">Controles Básicos</h3>
-            <ul>
-                <li><strong>Rotación:</strong> Click izquierdo + arrastrar</li>
-                <li><strong>Zoom:</strong> Rueda del mouse o scroll</li>
-                <li><strong>Paneo:</strong> Click derecho + arrastrar</li>
-                <li><strong>Centrar:</strong> Doble click en el modelo</li>
-            </ul>
-
-            <h3 style="color: #00d4ff; margin-top: 20px;">Vistas Angiográficas Estándar</h3>
-            <ul>
-                <li><strong>RAO 30°:</strong> Oblicua anterior derecha - Visualiza LAD proximal</li>
-                <li><strong>LAO 45°:</strong> Oblicua anterior izquierda - Visualiza circunfleja</li>
-                <li><strong>RAO Craneal:</strong> Mejor vista de LAD medio y distal</li>
-                <li><strong>LAO Caudal:</strong> Óptima para el tronco común izquierdo</li>
-                <li><strong>Spider View:</strong> Vista craneal extrema para bifurcación</li>
-            </ul>
-
-            <h3 style="color: #00d4ff; margin-top: 20px;">Funciones Avanzadas</h3>
-            <ul>
-                <li><strong>Simulación de Catéteres:</strong> Selecciona el tipo y ajusta su posición</li>
-                <li><strong>Mediciones:</strong> Activa el modo y haz click en dos puntos</li>
-                <li><strong>Visualización Selectiva:</strong> Oculta/muestra arterias específicas</li>
-                <li><strong>Captura de Pantalla:</strong> Guarda la vista actual en alta resolución</li>
-            </ul>
-
-            <h3 style="color: #00d4ff; margin-top: 20px;">Aplicaciones Clínicas</h3>
-            <ul>
-                <li>Planificación pre-procedimiento</li>
-                <li>Educación de pacientes y residentes</li>
-                <li>Presentaciones de casos clínicos</li>
-                <li>Evaluación de estenosis y anatomía coronaria</li>
-            </ul>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // Variables globales
-        let scene, camera, renderer, heart, arteries = {}, labels = [], catheters = [];
-        let isRotating = true, measurementMode = false, currentCatheter = null;
-        let measurements = [], stenosisMarkers = [];
-        let controls = {
-            isDragging: false,
-            previousMousePosition: { x: 0, y: 0 },
-            rotationSpeed: 0.01,
-            zoomLevel: 15
-        };
+        let scene, camera, renderer, heart, arteries = {};
+        let angles = { rao: 0, cran: 0 };
+        let parameters = { kv: 75, ma: 800, fps: 15, zoom: 100 };
+        let collimation = { top: 0, bottom: 0, left: 0, right: 0 };
+        let currentMode = 'standby';
+        let fluoroActive = false;
+        let cineActive = false;
+        let totalDose = 0;
+        let fluoTime = 0;
+        let fluoInterval = null;
+        let joystickActive = { rao: false, cran: false };
 
-        // Datos de estenosis predefinidas para simulación
-        const stenosisData = [
-            { position: new THREE.Vector3(-0.8, 0.5, 2.3), severity: 70, artery: 'LAD Proximal' },
-            { position: new THREE.Vector3(1.5, 1.2, 1.5), severity: 50, artery: 'RCA Media' }
-        ];
+        // Inicializar Sistema
+        function initSystem() {
+            setTimeout(() => {
+                document.getElementById('loadingSystem').style.display = 'none';
+                initFluoroscopy();
+                initJoysticks();
+                initPedals();
+                updateSystemTime();
+                setInterval(updateSystemTime, 1000);
+                setMode('standby');
+                
+                // Fecha del estudio
+                const today = new Date();
+                document.getElementById('studyDate').textContent = today.toLocaleDateString('es-PE');
+            }, 2000);
+        }
 
-        function init() {
-            // Configurar escena
+        // Inicializar Canvas de Fluoroscopia
+        function initFluoroscopy() {
+            const canvas = document.getElementById('fluoroscopyCanvas');
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a0a0a);
-            scene.fog = new THREE.Fog(0x0a0a0a, 20, 50);
-
-            // Configurar cámara
-            const canvas = document.getElementById('canvas3d');
+            scene.background = new THREE.Color(0x000000);
+            
             camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
             camera.position.set(0, 5, 15);
             camera.lookAt(0, 0, 0);
-
-            // Configurar renderer
+            
             renderer = new THREE.WebGLRenderer({ 
                 canvas, 
                 antialias: true,
-                preserveDrawingBuffer: true 
+                alpha: false
             });
             renderer.setSize(canvas.clientWidth, canvas.clientHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-            // Iluminación mejorada
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            
+            // Iluminación
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
             scene.add(ambientLight);
-
-            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight1.position.set(10, 10, 10);
-            directionalLight1.castShadow = true;
-            scene.add(directionalLight1);
-
-            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
-            directionalLight2.position.set(-10, 5, -10);
-            scene.add(directionalLight2);
-
-            const pointLight = new THREE.PointLight(0x00d4ff, 0.3, 50);
-            pointLight.position.set(0, 0, 10);
-            scene.add(pointLight);
-
-            // Crear elementos
-            createHeart();
-            createCoronaryArteries();
-            createLabels();
-            createStenosisMarkers();
-
-            // Event listeners
-            setupEventListeners();
-
-            // Actualizar fecha
-            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('es-PE');
-
-            // Ocultar loading
-            document.getElementById('loading').style.display = 'none';
-
-            // Iniciar animación
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 10);
+            scene.add(directionalLight);
+            
+            const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+            backLight.position.set(-10, -10, -10);
+            scene.add(backLight);
+            
+            // Crear anatomía coronaria
+            createCoronaryAnatomy();
+            
+            // Resize
+            window.addEventListener('resize', onWindowResize);
+            
+            // Iniciar renderizado
             animate();
         }
 
-        function createHeart() {
+        function createCoronaryAnatomy() {
             heart = new THREE.Group();
-
-            // Crear forma de corazón más realista
-            const heartShape = new THREE.Shape();
             
-            // Ventrículo izquierdo (más grande)
-            const leftVentricle = new THREE.SphereGeometry(1.8, 32, 32);
-            const lvMaterial = new THREE.MeshPhongMaterial({
+            // Corazón
+            const heartGeometry = new THREE.SphereGeometry(2, 32, 32);
+            const heartMaterial = new THREE.MeshPhongMaterial({
                 color: 0x880000,
                 transparent: true,
-                opacity: 0.3,
-                shininess: 30,
-                side: THREE.DoubleSide
-            });
-            const lvMesh = new THREE.Mesh(leftVentricle, lvMaterial);
-            lvMesh.scale.set(1.3, 1.4, 1);
-            lvMesh.position.set(-0.3, -0.2, 0);
-            heart.add(lvMesh);
-
-            // Ventrículo derecho (más pequeño)
-            const rightVentricle = new THREE.SphereGeometry(1.4, 32, 32);
-            const rvMesh = new THREE.Mesh(rightVentricle, lvMaterial);
-            rvMesh.scale.set(1, 1.2, 0.9);
-            rvMesh.position.set(0.8, -0.1, 0.3);
-            heart.add(rvMesh);
-
-            // Aurículas
-            const atrium = new THREE.SphereGeometry(0.9, 32, 32);
-            const atriumMaterial = new THREE.MeshPhongMaterial({
-                color: 0xaa0000,
-                transparent: true,
-                opacity: 0.25,
+                opacity: 0.2,
                 shininess: 30
             });
+            const heartMesh = new THREE.Mesh(heartGeometry, heartMaterial);
+            heartMesh.scale.set(1.2, 1.3, 0.9);
+            heart.add(heartMesh);
             
-            const leftAtrium = new THREE.Mesh(atrium, atriumMaterial);
-            leftAtrium.position.set(-0.5, 1.3, -0.2);
-            heart.add(leftAtrium);
-
-            const rightAtrium = new THREE.Mesh(atrium, atriumMaterial);
-            rightAtrium.scale.set(0.9, 0.9, 0.9);
-            rightAtrium.position.set(0.7, 1.2, 0);
-            heart.add(rightAtrium);
-
-            scene.add(heart);
-        }
-
-        function createCoronaryArteries() {
-            // Sistema Coronario Izquierdo
-            
-            // Tronco Común Izquierdo (LM)
-            arteries.lm = createArterySegment(
+            // Tronco Común Izquierdo
+            arteries.lm = createArtery(
                 new THREE.Vector3(0, 1.8, 2.2),
                 new THREE.Vector3(-0.5, 1.4, 2.4),
-                0.18,
-                0xff4444,
-                'lca',
-                'LM'
+                0.18, 0xff4444
             );
-
-            // Descendente Anterior (LAD)
+            
+            // LAD
             const ladPoints = [
                 new THREE.Vector3(-0.5, 1.4, 2.4),
                 new THREE.Vector3(-0.9, 0.8, 2.5),
                 new THREE.Vector3(-1.1, 0, 2.4),
                 new THREE.Vector3(-1.2, -0.8, 2.2),
-                new THREE.Vector3(-1.1, -1.6, 2),
-                new THREE.Vector3(-0.8, -2.2, 1.8)
+                new THREE.Vector3(-1.1, -1.6, 2)
             ];
-            arteries.lad = createCurvedArtery(ladPoints, 0.14, 0xff4444, 'lca', 'LAD');
-
-            // Ramas Diagonales
-            arteries.d1 = createArterySegment(
+            arteries.lad = createCurvedArtery(ladPoints, 0.14, 0xff4444);
+            
+            // Diagonales
+            arteries.d1 = createArtery(
                 new THREE.Vector3(-0.9, 0.8, 2.5),
                 new THREE.Vector3(-1.6, 0.9, 2.8),
-                0.09,
-                0xffaa00,
-                'lca',
-                'D1'
+                0.09, 0xffaa00
             );
-
-            arteries.d2 = createArterySegment(
+            
+            arteries.d2 = createArtery(
                 new THREE.Vector3(-1.1, 0, 2.4),
                 new THREE.Vector3(-1.9, -0.1, 2.7),
-                0.08,
-                0xffaa00,
-                'lca',
-                'D2'
+                0.08, 0xffaa00
             );
-
-            // Ramas Septales
-            arteries.s1 = createArterySegment(
-                new THREE.Vector3(-1.1, 0, 2.4),
-                new THREE.Vector3(-0.8, -0.2, 1.8),
-                0.06,
-                0xff8844,
-                'lca',
-                'S1'
-            );
-
-            // Circunfleja (LCx)
+            
+            // Circunfleja
             const lcxPoints = [
                 new THREE.Vector3(-0.5, 1.4, 2.4),
                 new THREE.Vector3(-1, 1.3, 1.8),
                 new THREE.Vector3(-1.6, 1, 1),
                 new THREE.Vector3(-2, 0.6, 0),
-                new THREE.Vector3(-2.2, 0.2, -0.8),
-                new THREE.Vector3(-2, -0.3, -1.4)
+                new THREE.Vector3(-2.2, 0.2, -0.8)
             ];
-            arteries.lcx = createCurvedArtery(lcxPoints, 0.12, 0xff6666, 'lca', 'LCx');
-
-            // Marginales Obtusas
-            arteries.om1 = createArterySegment(
+            arteries.lcx = createCurvedArtery(lcxPoints, 0.12, 0xff6666);
+            
+            // Marginales
+            arteries.om1 = createArtery(
                 new THREE.Vector3(-1, 1.3, 1.8),
                 new THREE.Vector3(-2.1, 1.5, 2),
-                0.09,
-                0x00ff88,
-                'lca',
-                'OM1'
+                0.09, 0x00ff88
             );
-
-            arteries.om2 = createArterySegment(
+            
+            arteries.om2 = createArtery(
                 new THREE.Vector3(-1.6, 1, 1),
                 new THREE.Vector3(-2.4, 1.1, 1.3),
-                0.08,
-                0x00ff88,
-                'lca',
-                'OM2'
+                0.08, 0x00ff88
             );
-
-            arteries.om3 = createArterySegment(
-                new THREE.Vector3(-2, 0.6, 0),
-                new THREE.Vector3(-2.6, 0.5, 0.3),
-                0.07,
-                0x00ff88,
-                'lca',
-                'OM3'
-            );
-
-            // Sistema Coronario Derecho
-
-            // Coronaria Derecha (RCA)
+            
+            // RCA
             const rcaPoints = [
                 new THREE.Vector3(0, 1.8, 2.2),
                 new THREE.Vector3(0.8, 1.6, 2),
@@ -1097,453 +1300,420 @@
                 new THREE.Vector3(2.1, 0.6, 0.5),
                 new THREE.Vector3(2.2, -0.2, -0.5),
                 new THREE.Vector3(2, -1, -1.2),
-                new THREE.Vector3(1.3, -1.7, -1.6),
-                new THREE.Vector3(0.5, -2.1, -1.5)
+                new THREE.Vector3(1.3, -1.7, -1.6)
             ];
-            arteries.rca = createCurvedArtery(rcaPoints, 0.14, 0x4444ff, 'rca', 'RCA');
-
-            // Rama del Cono
-            arteries.conus = createArterySegment(
-                new THREE.Vector3(0.8, 1.6, 2),
-                new THREE.Vector3(1.2, 1.8, 2.3),
-                0.07,
-                0x6666ff,
-                'rca',
-                'Cono'
-            );
-
-            // Rama del Nodo Sinusal
-            arteries.sinus = createArterySegment(
-                new THREE.Vector3(0.8, 1.6, 2),
-                new THREE.Vector3(0.6, 2.1, 1.8),
-                0.06,
-                0x6666ff,
-                'rca',
-                'N.Sinusal'
-            );
-
-            // Rama Aguda Marginal
-            arteries.am = createArterySegment(
-                new THREE.Vector3(2.1, 0.6, 0.5),
-                new THREE.Vector3(2.6, 0.7, 0.9),
-                0.08,
-                0x6666ff,
-                'rca',
-                'AM'
-            );
-
-            // Descendente Posterior (PDA)
+            arteries.rca = createCurvedArtery(rcaPoints, 0.14, 0x4444ff);
+            
+            // PDA
             const pdaPoints = [
+                new THREE.Vector3(1.3, -1.7, -1.6),
                 new THREE.Vector3(0.5, -2.1, -1.5),
                 new THREE.Vector3(0, -2.3, -1),
-                new THREE.Vector3(-0.4, -2.4, -0.4),
-                new THREE.Vector3(-0.6, -2.3, 0.3)
+                new THREE.Vector3(-0.4, -2.4, -0.4)
             ];
-            arteries.pda = createCurvedArtery(pdaPoints, 0.1, 0x6666ff, 'rca', 'PDA');
-
-            // Rama Posterolateral
-            arteries.pl = createArterySegment(
-                new THREE.Vector3(1.3, -1.7, -1.6),
-                new THREE.Vector3(0.8, -2, -2.2),
-                0.08,
-                0x6666ff,
-                'rca',
-                'PL'
-            );
+            arteries.pda = createCurvedArtery(pdaPoints, 0.1, 0x6666ff);
+            
+            scene.add(heart);
         }
 
-        function createArterySegment(start, end, radius, color, group, name) {
+        function createArtery(start, end, radius, color) {
             const direction = new THREE.Vector3().subVectors(end, start);
             const length = direction.length();
-            
-            const geometry = new THREE.CylinderGeometry(radius, radius * 0.9, length, 16);
+            const geometry = new THREE.CylinderGeometry(radius, radius, length, 16);
             const material = new THREE.MeshPhongMaterial({
                 color: color,
                 shininess: 100,
-                specular: 0xffffff,
                 emissive: color,
-                emissiveIntensity: 0.1
+                emissiveIntensity: 0.2
             });
-            
             const artery = new THREE.Mesh(geometry, material);
             artery.position.copy(start).add(direction.multiplyScalar(0.5));
-            
             const axis = new THREE.Vector3(0, 1, 0);
             artery.quaternion.setFromUnitVectors(axis, direction.normalize());
-            
-            artery.userData = { 
-                group: group, 
-                name: name,
-                start: start.clone(),
-                end: end.clone()
-            };
-            
             heart.add(artery);
             return artery;
         }
 
-        function createCurvedArtery(points, radius, color, group, name) {
+        function createCurvedArtery(points, radius, color) {
             const curve = new THREE.CatmullRomCurve3(points);
-            const tubeGeometry = new THREE.TubeGeometry(curve, 64, radius, 16, false);
+            const geometry = new THREE.TubeGeometry(curve, 64, radius, 16, false);
             const material = new THREE.MeshPhongMaterial({
                 color: color,
                 shininess: 100,
-                specular: 0xffffff,
                 emissive: color,
-                emissiveIntensity: 0.1
+                emissiveIntensity: 0.2
             });
-            
-            const artery = new THREE.Mesh(tubeGeometry, material);
-            artery.userData = { 
-                group: group, 
-                name: name,
-                curve: curve
-            };
-            
+            const artery = new THREE.Mesh(geometry, material);
             heart.add(artery);
             return artery;
-        }
-
-        function createLabels() {
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.width = 256;
-            canvas.height = 64;
-
-            const labelPositions = [
-                { name: 'LAD', pos: new THREE.Vector3(-1.1, 0, 2.6) },
-                { name: 'LCx', pos: new THREE.Vector3(-2, 0.6, 0.2) },
-                { name: 'RCA', pos: new THREE.Vector3(2.2, -0.2, -0.3) },
-                { name: 'LM', pos: new THREE.Vector3(-0.5, 1.4, 2.6) }
-            ];
-
-            labelPositions.forEach(label => {
-                context.clearRect(0, 0, canvas.width, canvas.height);
-                context.fillStyle = '#00d4ff';
-                context.font = 'Bold 48px Arial';
-                context.textAlign = 'center';
-                context.fillText(label.name, canvas.width / 2, canvas.height / 2 + 16);
-
-                const texture = new THREE.CanvasTexture(canvas);
-                const spriteMaterial = new THREE.SpriteMaterial({ 
-                    map: texture,
-                    transparent: true,
-                    opacity: 0.9
-                });
-                const sprite = new THREE.Sprite(spriteMaterial);
-                sprite.position.copy(label.pos);
-                sprite.scale.set(1, 0.25, 1);
-                sprite.userData.isLabel = true;
-                
-                labels.push(sprite);
-                heart.add(sprite);
-            });
-        }
-
-        function createStenosisMarkers() {
-            stenosisData.forEach(stenosis => {
-                const geometry = new THREE.SphereGeometry(0.15, 16, 16);
-                const material = new THREE.MeshPhongMaterial({
-                    color: 0xff4757,
-                    emissive: 0xff0000,
-                    emissiveIntensity: 0.5,
-                    transparent: true,
-                    opacity: 0.8
-                });
-                
-                const marker = new THREE.Mesh(geometry, material);
-                marker.position.copy(stenosis.position);
-                marker.userData = {
-                    isStenosis: true,
-                    severity: stenosis.severity,
-                    artery: stenosis.artery
-                };
-                marker.visible = false;
-                
-                stenosisMarkers.push(marker);
-                heart.add(marker);
-            });
-        }
-
-        function setupEventListeners() {
-            const canvas = document.getElementById('canvas3d');
-
-            canvas.addEventListener('mousedown', (e) => {
-                controls.isDragging = true;
-                controls.previousMousePosition = { x: e.clientX, y: e.clientY };
-            });
-
-            canvas.addEventListener('mousemove', (e) => {
-                if (controls.isDragging && !measurementMode) {
-                    const deltaX = e.clientX - controls.previousMousePosition.x;
-                    const deltaY = e.clientY - controls.previousMousePosition.y;
-
-                    heart.rotation.y += deltaX * controls.rotationSpeed;
-                    heart.rotation.x += deltaY * controls.rotationSpeed;
-
-                    controls.previousMousePosition = { x: e.clientX, y: e.clientY };
-                    
-                    updateRotationDisplay();
-                }
-            });
-
-            canvas.addEventListener('mouseup', () => {
-                controls.isDragging = false;
-            });
-
-            canvas.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const delta = e.deltaY * -0.01;
-                controls.zoomLevel += delta;
-                controls.zoomLevel = Math.max(8, Math.min(30, controls.zoomLevel));
-                camera.position.z = controls.zoomLevel;
-                updateZoomDisplay();
-            });
-
-            canvas.addEventListener('dblclick', () => {
-                resetView();
-            });
-
-            window.addEventListener('resize', onWindowResize);
         }
 
         function animate() {
             requestAnimationFrame(animate);
-
-            if (isRotating && !controls.isDragging) {
-                heart.rotation.y += 0.003;
-                updateRotationDisplay();
-            }
-
-            // Animar estenosis
-            stenosisMarkers.forEach((marker, index) => {
-                if (marker.visible) {
-                    marker.scale.set(
-                        1 + Math.sin(Date.now() * 0.003 + index) * 0.2,
-                        1 + Math.sin(Date.now() * 0.003 + index) * 0.2,
-                        1 + Math.sin(Date.now() * 0.003 + index) * 0.2
-                    );
-                }
-            });
-
+            
+            // Aplicar rotación según ángulos
+            heart.rotation.y = THREE.MathUtils.degToRad(-angles.rao);
+            heart.rotation.x = THREE.MathUtils.degToRad(angles.cran);
+            
             renderer.render(scene, camera);
         }
 
-        // Funciones de control
-        function setAngiographicView(view) {
-            const views = {
-                'RAO30': { pos: [10, 3, 10], name: 'RAO 30°' },
-                'LAO45': { pos: [-12, 3, 10], name: 'LAO 45°' },
-                'RAO30_CRAN': { pos: [10, 12, 8], name: 'RAO 30° Craneal' },
-                'LAO45_CRAN': { pos: [-12, 12, 8], name: 'LAO 45° Craneal' },
-                'RAO30_CAUD': { pos: [10, -8, 10], name: 'RAO 30° Caudal' },
-                'LAO45_CAUD': { pos: [-12, -8, 10], name: 'LAO 45° Caudal' },
-                'AP_CRAN': { pos: [0, 18, 8], name: 'AP Craneal' },
-                'AP_CAUD': { pos: [0, -15, 8], name: 'AP Caudal' },
-                'LATERAL': { pos: [20, 0, 0], name: 'Lateral' },
-                'SPIDER': { pos: [0, 20, 5], name: 'Spider View' }
-            };
-
-            if (views[view]) {
-                camera.position.set(...views[view].pos);
-                camera.lookAt(0, 0, 0);
-                document.getElementById('currentView').textContent = views[view].name;
-            }
-        }
-
-        function toggleArteryVisibility(type) {
-            ['btnAll', 'btnLCA', 'btnRCA'].forEach(id => {
-                document.getElementById(id).classList.remove('active');
-            });
-
-            if (type === 'all') {
-                document.getElementById('btnAll').classList.add('active');
-                document.getElementById('visibleArteries').textContent = 'Todas';
-            } else if (type === 'lca') {
-                document.getElementById('btnLCA').classList.add('active');
-                document.getElementById('visibleArteries').textContent = 'Coronaria Izquierda';
-            } else if (type === 'rca') {
-                document.getElementById('btnRCA').classList.add('active');
-                document.getElementById('visibleArteries').textContent = 'Coronaria Derecha';
-            }
-
-            heart.children.forEach(child => {
-                if (child.userData.group) {
-                    child.visible = type === 'all' || child.userData.group === type;
-                }
-            });
-        }
-
-        function toggleLabels() {
-            const visible = document.getElementById('chkLabels').checked;
-            labels.forEach(label => label.visible = visible);
-        }
-
-        function toggleHeart() {
-            const visible = document.getElementById('chkHeart').checked;
-            heart.children.forEach(child => {
-                if (!child.userData.group && !child.userData.isLabel && !child.userData.isStenosis) {
-                    child.visible = visible;
-                }
-            });
-        }
-
-        function toggleGrid() {
-            const visible = document.getElementById('chkGrid').checked;
-            let gridHelper = scene.getObjectByName('gridHelper');
+        // Joysticks
+        function initJoysticks() {
+            const handleRAO = document.getElementById('handleRAO');
+            const handleCRAN = document.getElementById('handleCRAN');
+            const joystickRAO = document.getElementById('joystickRAO');
+            const joystickCRAN = document.getElementById('joystickCRAN');
             
-            if (visible && !gridHelper) {
-                gridHelper = new THREE.GridHelper(20, 20, 0x00d4ff, 0x444444);
-                gridHelper.name = 'gridHelper';
-                scene.add(gridHelper);
-            } else if (!visible && gridHelper) {
-                scene.remove(gridHelper);
-            }
+            setupJoystick(handleRAO, joystickRAO, 'rao');
+            setupJoystick(handleCRAN, joystickCRAN, 'cran');
         }
 
-        function toggleStenosis() {
-            const visible = document.getElementById('chkStenosis').checked;
-            stenosisMarkers.forEach(marker => marker.visible = visible);
-        }
-
-        function toggleRotation() {
-            isRotating = !isRotating;
-            const btn = document.getElementById('btnRotation');
-            btn.textContent = isRotating ? '⏸️ Pausar Rotación' : '▶️ Reanudar Rotación';
-        }
-
-        function resetView() {
-            camera.position.set(0, 5, 15);
-            camera.lookAt(0, 0, 0);
-            heart.rotation.set(0, 0, 0);
-            controls.zoomLevel = 15;
-            updateRotationDisplay();
-            updateZoomDisplay();
-            document.getElementById('currentView').textContent = 'Frontal';
-        }
-
-        function toggleMeasurement() {
-            measurementMode = !measurementMode;
-            document.getElementById('currentMode').textContent = measurementMode ? 'Medición' : 'Visualización';
-            document.getElementById('crosshair').style.display = measurementMode ? 'block' : 'none';
-        }
-
-        function updateHeartOpacity(value) {
-            document.getElementById('heartOpacity').textContent = value + '%';
-            heart.children.forEach(child => {
-                if (!child.userData.group && !child.userData.isLabel) {
-                    if (child.material) {
-                        child.material.opacity = value / 100 * 0.5;
+        function setupJoystick(handle, container, type) {
+            let isDragging = false;
+            let startPos = { x: 0, y: 0 };
+            const maxDistance = 40;
+            
+            handle.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                joystickActive[type] = true;
+                const rect = container.getBoundingClientRect();
+                startPos = {
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2
+                };
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const deltaX = e.clientX - startPos.x;
+                const deltaY = e.clientY - startPos.y;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                let x = deltaX;
+                let y = deltaY;
+                
+                if (distance > maxDistance) {
+                    const angle = Math.atan2(deltaY, deltaX);
+                    x = Math.cos(angle) * maxDistance;
+                    y = Math.sin(angle) * maxDistance;
+                }
+                
+                handle.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+                
+                if (type === 'rao') {
+                    angles.rao = (x / maxDistance) * 60;
+                    document.getElementById('raoValue').textContent = angles.rao.toFixed(1);
+                    document.getElementById('displayRao').textContent = 
+                        (angles.rao > 0 ? 'RAO ' : 'LAO ') + Math.abs(angles.rao).toFixed(1) + '°';
+                } else {
+                    angles.cran = (y / maxDistance) * -45;
+                    document.getElementById('cranValue').textContent = angles.cran.toFixed(1);
+                    document.getElementById('displayCran').textContent = 
+                        (angles.cran > 0 ? 'CRAN ' : 'CAUD ') + Math.abs(angles.cran).toFixed(1) + '°';
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    joystickActive[type] = false;
+                    handle.style.transform = 'translate(-50%, -50%)';
+                    
+                    if (type === 'rao') {
+                        angles.rao = 0;
+                        document.getElementById('raoValue').textContent = '0.0';
+                        document.getElementById('displayRao').textContent = '0.0°';
+                    } else {
+                        angles.cran = 0;
+                        document.getElementById('cranValue').textContent = '0.0';
+                        document.getElementById('displayCran').textContent = '0.0°';
                     }
                 }
             });
         }
 
-        function updateArteryThickness(value) {
-            document.getElementById('arteryThickness').textContent = value + '%';
-            const scale = value / 100;
-            heart.children.forEach(child => {
-                if (child.userData.group) {
-                    child.scale.set(scale, 1, scale);
+        // Pedales
+        function initPedals() {
+            const pedalFluoro = document.getElementById('pedalFluoro');
+            const pedalCine = document.getElementById('pedalCine');
+            
+            // Fluoro pedal
+            pedalFluoro.addEventListener('mousedown', () => {
+                startFluoroscopy();
+            });
+            
+            pedalFluoro.addEventListener('mouseup', () => {
+                stopFluoroscopy();
+            });
+            
+            // Cine pedal
+            pedalCine.addEventListener('mousedown', () => {
+                startCine();
+            });
+            
+            pedalCine.addEventListener('mouseup', () => {
+                stopCine();
+            });
+            
+            // Soporte para teclado
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    startFluoroscopy();
+                } else if (e.code === 'Enter') {
+                    e.preventDefault();
+                    startCine();
+                }
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    stopFluoroscopy();
+                } else if (e.code === 'Enter') {
+                    e.preventDefault();
+                    stopCine();
                 }
             });
         }
 
-        function changeBackground(color) {
-            scene.background = new THREE.Color(color);
-            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
-            event.target.classList.add('active');
+        // Control de Fluoroscopia
+        function startFluoroscopy() {
+            if (fluoroActive) return;
+            
+            fluoroActive = true;
+            document.getElementById('pedalFluoro').classList.add('active');
+            document.getElementById('displayMode').textContent = 'FLUOROSCOPIA';
+            
+            // Iniciar contador de tiempo
+            fluoInterval = setInterval(() => {
+                fluoTime++;
+                const minutes = Math.floor(fluoTime / 60);
+                const seconds = fluoTime % 60;
+                document.getElementById('fluoTime').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Incrementar dosis
+                const doserate = (parameters.kv / 100) * (parameters.ma / 1000) * 0.1;
+                totalDose += doserate;
+                document.getElementById('doseValue').textContent = totalDose.toFixed(1);
+                document.getElementById('totalDose').textContent = totalDose.toFixed(1);
+                
+                // Actualizar barra de dosis
+                const dosePercent = Math.min((totalDose / 1000) * 100, 100);
+                document.getElementById('doseMeter').style.width = dosePercent + '%';
+                
+                // Actualizar barra de tiempo
+                const timePercent = Math.min((fluoTime / 600) * 100, 100);
+                document.getElementById('timeMeter').style.width = timePercent + '%';
+            }, 1000);
         }
 
-        function addCatheter(type) {
-            if (type === 'clear') {
-                catheters.forEach(cath => heart.remove(cath));
-                catheters = [];
-                currentCatheter = null;
-                return;
+        function stopFluoroscopy() {
+            if (!fluoroActive) return;
+            
+            fluoroActive = false;
+            document.getElementById('pedalFluoro').classList.remove('active');
+            document.getElementById('displayMode').textContent = 'ESPERA';
+            
+            if (fluoInterval) {
+                clearInterval(fluoInterval);
+                fluoInterval = null;
             }
+        }
 
-            // Remover catéter anterior
-            if (currentCatheter) {
-                heart.remove(currentCatheter);
+        function startCine() {
+            if (cineActive) return;
+            
+            cineActive = true;
+            document.getElementById('pedalCine').classList.add('active');
+            document.getElementById('displayMode').textContent = 'GRABANDO CINE';
+            
+            // Dosis más alta en cine
+            setTimeout(() => {
+                const cineDose = (parameters.kv / 100) * (parameters.ma / 1000) * parameters.fps * 0.5;
+                totalDose += cineDose;
+                document.getElementById('doseValue').textContent = totalDose.toFixed(1);
+                document.getElementById('totalDose').textContent = totalDose.toFixed(1);
+                
+                const dosePercent = Math.min((totalDose / 1000) * 100, 100);
+                document.getElementById('doseMeter').style.width = dosePercent + '%';
+            }, 100);
+        }
+
+        function stopCine() {
+            if (!cineActive) return;
+            
+            cineActive = false;
+            document.getElementById('pedalCine').classList.remove('active');
+            document.getElementById('displayMode').textContent = 'ESPERA';
+        }
+
+        // Modos
+        function setMode(mode) {
+            currentMode = mode;
+            
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            
+            if (mode === 'standby') {
+                document.getElementById('modeStandby').classList.add('active');
+                document.getElementById('displayMode').textContent = 'ESPERA';
+            } else if (mode === 'fluoro') {
+                document.getElementById('modeFluoro').classList.add('active');
+            } else if (mode === 'cine') {
+                document.getElementById('modeCine').classList.add('active');
             }
+        }
 
-            // Crear nuevo catéter
-            const catheterGeometry = new THREE.CylinderGeometry(0.03, 0.03, 5, 8);
-            const catheterMaterial = new THREE.MeshPhongMaterial({
-                color: 0xffaa00,
-                emissive: 0xff8800,
-                emissiveIntensity: 0.3
+        // Vistas Predefinidas
+        function setPresetView(view) {
+            const views = {
+                'RAO30': { rao: 30, cran: 0 },
+                'LAO45': { rao: -45, cran: 0 },
+                'LAO60': { rao: -60, cran: 0 },
+                'RAO30CRAN': { rao: 30, cran: 25 },
+                'LAO45CRAN': { rao: -45, cran: 25 },
+                'APCRAN': { rao: 0, cran: 30 },
+                'RAO30CAUD': { rao: 30, cran: -25 },
+                'LAO45CAUD': { rao: -45, cran: -25 },
+                'APCAUD': { rao: 0, cran: -30 }
+            };
+            
+            if (views[view]) {
+                angles.rao = views[view].rao;
+                angles.cran = views[view].cran;
+                
+                document.getElementById('raoValue').textContent = angles.rao.toFixed(1);
+                document.getElementById('cranValue').textContent = angles.cran.toFixed(1);
+                
+                document.getElementById('displayRao').textContent = 
+                    (angles.rao > 0 ? 'RAO ' : angles.rao < 0 ? 'LAO ' : '') + Math.abs(angles.rao).toFixed(1) + '°';
+                document.getElementById('displayCran').textContent = 
+                    (angles.cran > 0 ? 'CRAN ' : angles.cran < 0 ? 'CAUD ' : '') + Math.abs(angles.cran).toFixed(1) + '°';
+            }
+        }
+
+        // Parámetros
+        function updateParameter(param, value) {
+            parameters[param] = parseFloat(value);
+            
+            if (param === 'kv') {
+                document.getElementById('kvValue').textContent = value;
+                document.getElementById('displayKv').textContent = value;
+            } else if (param === 'ma') {
+                document.getElementById('maValue').textContent = value;
+                document.getElementById('displayMa').textContent = value;
+            } else if (param === 'fps') {
+                document.getElementById('fpsValue').textContent = value;
+                document.getElementById('displayFps').textContent = value;
+            } else if (param === 'zoom') {
+                document.getElementById('zoomValue').textContent = value;
+                document.getElementById('displayZoom').textContent = value + '%';
+                camera.position.z = 15 * (200 - value) / 100;
+            }
+        }
+
+        // Colimación
+        function updateCollimation(side, value) {
+            collimation[side] = parseFloat(value);
+        }
+
+        function openCollimation() {
+            ['top', 'bottom', 'left', 'right'].forEach(side => {
+                collimation[side] = 0;
             });
-            
-            currentCatheter = new THREE.Mesh(catheterGeometry, catheterMaterial);
-            currentCatheter.position.set(0, -3, 2);
-            currentCatheter.userData.type = type;
-            
-            heart.add(currentCatheter);
-            catheters.push(currentCatheter);
-            
-            document.getElementById('catheterSlider').value = 0;
-            updateCatheterProgress(0);
+            document.querySelectorAll('.collimation-slider input').forEach(slider => {
+                slider.value = 0;
+            });
         }
 
-        function updateCatheterProgress(value) {
-            document.getElementById('catheterProgress').textContent = value + '%';
-            if (currentCatheter) {
-                const progress = value / 100;
-                currentCatheter.position.y = -3 + (progress * 4);
-            }
+        function closeCollimation() {
+            ['top', 'bottom', 'left', 'right'].forEach(side => {
+                collimation[side] = 50;
+            });
+            document.querySelectorAll('.collimation-slider input').forEach(slider => {
+                slider.value = 50;
+            });
         }
 
-        function clearMeasurements() {
-            measurements = [];
-            document.getElementById('measurementsList').innerHTML = '<p style="text-align: center; color: #666; font-size: 0.8rem;">No hay mediciones</p>';
+        // Herramientas
+        function toggleGrid() {
+            const grid = document.getElementById('gridOverlay');
+            grid.classList.toggle('visible');
         }
 
-        function exportImage() {
+        function toggleSubtraction() {
+            console.log('Sustracción digital activada');
+        }
+
+        function enhanceImage() {
+            console.log('Realce de imagen activado');
+        }
+
+        function invertColors() {
+            console.log('Inversión de colores activada');
+        }
+
+        function freezeImage() {
+            console.log('Imagen congelada');
+        }
+
+        function saveImage() {
             renderer.render(scene, camera);
             const dataURL = renderer.domElement.toDataURL('image/png');
             const link = document.createElement('a');
-            link.download = `coronarias-3d-${Date.now()}.png`;
+            link.download = `angio-${Date.now()}.png`;
             link.href = dataURL;
             link.click();
+            console.log('Imagen guardada');
         }
 
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-            } else {
-                document.exitFullscreen();
-            }
+        function lastImageHold() {
+            console.log('Last Image Hold activado');
         }
 
-        function showHelp() {
-            document.getElementById('helpModal').classList.add('active');
+        function roadmap() {
+            console.log('Roadmap activado');
         }
 
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
+        function stentBoost() {
+            console.log('StentBoost activado');
         }
 
-        function updateRotationDisplay() {
-            const angle = Math.round((heart.rotation.y * 180 / Math.PI) % 360);
-            document.getElementById('rotationAngle').textContent = angle + '°';
+        // Controles adicionales
+        function resetAngles() {
+            angles = { rao: 0, cran: 0 };
+            document.getElementById('raoValue').textContent = '0.0';
+            document.getElementById('cranValue').textContent = '0.0';
+            document.getElementById('displayRao').textContent = '0.0°';
+            document.getElementById('displayCran').textContent = '0.0°';
         }
 
-        function updateZoomDisplay() {
-            const zoom = Math.round((30 - controls.zoomLevel) / 22 * 100 + 100);
-            document.getElementById('zoomLevel').textContent = zoom + '%';
+        function parkPosition() {
+            angles = { rao: 0, cran: -45 };
+            document.getElementById('raoValue').textContent = '0.0';
+            document.getElementById('cranValue').textContent = '-45.0';
+            document.getElementById('displayRao').textContent = '0.0°';
+            document.getElementById('displayCran').textContent = 'CAUD 45.0°';
+        }
+
+        function updateSystemTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('es-PE', { hour12: false });
+            document.getElementById('systemTime').textContent = timeStr;
         }
 
         function onWindowResize() {
-            const canvas = document.getElementById('canvas3d');
+            const canvas = document.getElementById('fluoroscopyCanvas');
             camera.aspect = canvas.clientWidth / canvas.clientHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(canvas.clientWidth, canvas.clientHeight);
         }
 
-        // Iniciar cuando cargue la página
-        window.addEventListener('load', init);
+        // Iniciar sistema
+        window.addEventListener('load', initSystem);
     </script>
 </body>
 </html>
