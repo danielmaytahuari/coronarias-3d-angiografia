@@ -3,613 +3,1547 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Correlación 3D-2D Angiografía Coronaria | YouTube Edition</title>
+    <title>Sistema Avanzado de Radiología Intervencionista 3D</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
             color: #fff;
             overflow: hidden;
         }
+
         .header {
             background: rgba(0, 0, 0, 0.8);
             padding: 15px 20px;
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             backdrop-filter: blur(10px);
             border-bottom: 2px solid #00d4ff;
+            z-index: 1000;
         }
-        .header h1 {
+
+        .header-left h1 {
             font-size: 1.5rem;
             color: #00d4ff;
-            display: inline-block;
+            margin-bottom: 3px;
         }
-        .premium-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #ff0000, #ff4444);
-            color: #fff;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            margin-left: 10px;
+
+        .header-left p {
+            font-size: 0.8rem;
+            color: #a0a0a0;
         }
-        .youtube-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #00ff00, #44ff44);
-            color: #000;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            margin-left: 5px;
-        }
-        .container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr auto;
-            height: calc(100vh - 80px);
+
+        .header-right {
+            display: flex;
             gap: 10px;
-            padding: 10px;
         }
-        .viewer-3d, .viewer-2d {
-            position: relative;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .viewer-3d { border: 2px solid #00d4ff; }
-        .viewer-2d { 
-            border: 2px solid #ff4757;
-            background: #000;
-        }
-        .viewer-label {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.9);
+
+        .header-btn {
             padding: 8px 15px;
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid #00d4ff;
             border-radius: 5px;
-            font-weight: bold;
-            z-index: 10;
+            color: #00d4ff;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.85rem;
         }
-        .viewer-3d .viewer-label { color: #00d4ff; border: 1px solid #00d4ff; }
-        .viewer-2d .viewer-label { color: #ff4757; border: 1px solid #ff4757; }
-        #canvas3d { width: 100%; height: 100%; display: block; }
-        
-        /* YouTube iframe container */
-        .youtube-container {
+
+        .header-btn:hover {
+            background: #00d4ff;
+            color: #000;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+
+        .sidebar-left {
+            width: 280px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px;
+            overflow-y: auto;
+            border-right: 2px solid #00d4ff;
+        }
+
+        .viewer-container {
+            flex: 1;
             position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .viewer-main {
+            flex: 1;
+            position: relative;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        #canvas3d {
             width: 100%;
             height: 100%;
-            padding: 60px 20px 20px 20px;
+            display: block;
         }
-        .youtube-wrapper {
-            position: relative;
+
+        .bottom-panel {
+            height: 200px;
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 2px solid #00d4ff;
+            display: flex;
+            overflow-x: auto;
+        }
+
+        .angiography-view {
+            min-width: 250px;
+            padding: 10px;
+            border-right: 1px solid #333;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .angiography-view:hover {
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .angiography-view img {
             width: 100%;
-            height: 100%;
-            background: #000;
+            height: 130px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 2px solid #00d4ff;
+        }
+
+        .angiography-view p {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #00d4ff;
+        }
+
+        .sidebar-right {
+            width: 320px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px;
+            overflow-y: auto;
+            border-left: 2px solid #00d4ff;
+        }
+
+        .control-panel {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
             border-radius: 8px;
-            overflow: hidden;
+            margin-bottom: 15px;
+            border: 1px solid #00d4ff;
         }
-        .youtube-wrapper iframe {
+
+        .control-panel h3 {
+            color: #00d4ff;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 0.85rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn.active {
+            background: linear-gradient(135deg, #ff4757 0%, #cc3344 100%);
+            color: #fff;
+        }
+
+        .btn-small {
+            width: calc(50% - 4px);
+            display: inline-block;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .btn-small:nth-child(2n) {
+            margin-right: 0;
+        }
+
+        .slider-control {
+            margin-bottom: 15px;
+        }
+
+        .slider-control label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+            color: #a0a0a0;
+        }
+
+        .slider-control input[type="range"] {
+            width: 100%;
+            height: 5px;
+            border-radius: 5px;
+            background: #333;
+            outline: none;
+        }
+
+        .slider-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #00d4ff;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            display: inline-block;
+            float: right;
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 3px solid #00d4ff;
+        }
+
+        .info-card h4 {
+            color: #00d4ff;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .info-card p {
+            font-size: 0.8rem;
+            line-height: 1.4;
+            color: #d0d0d0;
+        }
+
+        .info-card ul {
+            margin-left: 15px;
+            margin-top: 6px;
+            font-size: 0.8rem;
+        }
+
+        .measurements-list {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .measurement-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #333;
+            font-size: 0.8rem;
+        }
+
+        .measurement-item:last-child {
+            border-bottom: none;
+        }
+
+        .catheter-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .catheter-btn {
+            flex: 1;
+            padding: 8px;
+            background: rgba(255, 170, 0, 0.2);
+            border: 1px solid #ffaa00;
+            border-radius: 5px;
+            color: #ffaa00;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.75rem;
+        }
+
+        .catheter-btn:hover {
+            background: #ffaa00;
+            color: #000;
+        }
+
+        .catheter-btn.active {
+            background: #ffaa00;
+            color: #000;
+        }
+
+        .top-controls {
             position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .top-controls > div {
+            pointer-events: all;
+        }
+
+        .info-overlay {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #00d4ff;
+            backdrop-filter: blur(10px);
+        }
+
+        .info-overlay-right {
+            text-align: right;
+        }
+
+        .info-overlay p {
+            font-size: 0.85rem;
+            margin-bottom: 3px;
+            color: #d0d0d0;
+        }
+
+        .info-overlay .highlight {
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        .center-crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            border: 2px solid #00d4ff;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .center-crosshair::before,
+        .center-crosshair::after {
+            content: '';
+            position: absolute;
+            background: #00d4ff;
+        }
+
+        .center-crosshair::before {
+            top: 50%;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            transform: translateY(-50%);
+        }
+
+        .center-crosshair::after {
+            left: 50%;
+            top: 10%;
+            bottom: 10%;
+            width: 2px;
+            transform: translateX(-50%);
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #00d4ff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            border: none;
-        }
-        
-        .placeholder {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            flex-direction: column;
-            gap: 15px;
-            padding: 20px;
-        }
-        .placeholder h3 {
-            color: #00d4ff;
-            font-size: 1.2rem;
-        }
-        .placeholder p {
-            color: #aaa;
-            text-align: center;
-            max-width: 300px;
-        }
-        .placeholder .demo-icon {
-            font-size: 3rem;
-            animation: bounce 2s infinite;
-        }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        .controls-panel {
-            grid-column: 1 / -1;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 10px;
-            padding: 20px;
-            border: 1px solid #00d4ff;
-            display: flex;
-            gap: 30px;
-            overflow-x: auto;
-        }
-        .control-section { min-width: 200px; }
-        .control-section h3 {
-            color: #00d4ff;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            border-bottom: 2px solid #00d4ff;
-            padding-bottom: 5px;
-        }
-        .projection-buttons {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-        }
-        .projection-btn {
-            padding: 10px;
-            background: rgba(0, 212, 255, 0.2);
-            border: 1px solid #00d4ff;
-            border-radius: 5px;
-            color: #fff;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.85rem;
-            font-weight: bold;
-        }
-        .projection-btn:hover { 
-            background: rgba(0, 212, 255, 0.4); 
-            transform: translateY(-2px); 
-            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
-        }
-        .projection-btn.active { 
-            background: #ff4757; 
-            border-color: #ff4757;
-            box-shadow: 0 5px 20px rgba(255, 71, 87, 0.5);
-        }
-        .view-controls { display: flex; flex-direction: column; gap: 8px; }
-        .view-btn {
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #666;
-            border-radius: 5px;
-            color: #fff;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.8rem;
-        }
-        .view-btn:hover { 
-            background: rgba(255, 255, 255, 0.2); 
-            transform: translateX(5px);
-        }
-        .view-btn.active { 
-            background: #00d4ff; 
-            border-color: #00d4ff; 
-            color: #000; 
-        }
-        .angle-info {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
             background: rgba(0, 0, 0, 0.9);
-            padding: 8px 12px;
-            border-radius: 5px;
-            font-size: 0.85rem;
-            border: 1px solid #ffd700;
-            color: #ffd700;
-            font-weight: bold;
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
         }
-        .case-option {
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid #444;
-            border-radius: 5px;
-            margin-bottom: 8px;
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(20, 20, 20, 0.95);
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #00d4ff;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 1.5rem;
             cursor: pointer;
-            transition: all 0.3s;
+            color: #ff4757;
         }
-        .case-option:hover { 
-            background: rgba(255, 255, 255, 0.1); 
-            border-color: #00d4ff; 
-        }
-        .case-option.active { 
-            background: rgba(0, 212, 255, 0.2); 
-            border-color: #00d4ff; 
-        }
-        .case-title { 
-            font-weight: bold; 
-            color: #00d4ff; 
-            font-size: 0.9rem; 
-            margin-bottom: 3px; 
-        }
-        .case-desc { 
-            font-size: 0.75rem; 
-            color: #aaa; 
-        }
-        .annotation {
+
+        .stenosis-marker {
             position: absolute;
-            top: 50px;
-            left: 10px;
-            background: rgba(255, 215, 0, 0.95);
-            color: #000;
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            z-index: 25;
-            max-width: 300px;
-        }
-        .sync-indicator {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 255, 0, 0.9);
-            color: #000;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.75rem;
-            font-weight: bold;
+            width: 20px;
+            height: 20px;
+            background: #ff4757;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            cursor: pointer;
             animation: pulse 2s infinite;
         }
+
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
         }
-        .instruction-note {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0, 255, 0, 0.95);
-            color: #000;
-            padding: 12px 20px;
-            border-radius: 8px;
+
+        .legend {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 12px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        .legend h4 {
+            color: #00d4ff;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .legend-color {
+            width: 25px;
+            height: 12px;
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+
+        .legend-text {
+            font-size: 0.75rem;
+            color: #d0d0d0;
+        }
+
+        .checkbox-group {
+            margin: 10px 0;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
             font-size: 0.85rem;
-            font-weight: bold;
-            z-index: 1000;
-            max-width: 320px;
-            border: 2px solid #00ff00;
-            animation: slideIn 0.5s ease-out;
+            color: #d0d0d0;
+            cursor: pointer;
         }
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00d4ff;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0099cc;
+        }
+
+        .color-picker-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .color-option:hover {
+            border-color: #fff;
+            transform: scale(1.1);
+        }
+
+        .color-option.active {
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px #00d4ff;
+        }
+
+        @media (max-width: 1200px) {
+            .sidebar-left, .sidebar-right {
+                width: 250px;
             }
-            to {
-                transform: translateX(0);
-                opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .sidebar-left, .sidebar-right {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+            }
+            
+            .bottom-panel {
+                height: 150px;
             }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>
-            Correlación 3D-2D Angiografía Coronaria 
-            <span class="premium-badge">🎬 YOUTUBE</span>
-            <span class="youtube-badge">✅ NETLIFY OK</span>
-        </h1>
-    </div>
-
-    <div class="container">
-        <div class="viewer-3d">
-            <div class="viewer-label">🎯 MODELO 3D</div>
-            <div class="sync-indicator" id="syncIndicator">● SINCRONIZADO</div>
-            <canvas id="canvas3d"></canvas>
-            <div class="angle-info" id="angleInfo">Vista: Inicial</div>
+        <div class="header-left">
+            <h1>🫀 Sistema Avanzado de Radiología Intervencionista 3D</h1>
+            <p>Hospital Alberto Sabogal Sologuren - EsSalud | Servicio de Hemodinamia</p>
         </div>
-
-        <div class="viewer-2d">
-            <div class="viewer-label">📸 ANGIOGRAFÍA YOUTUBE</div>
-            <div id="angioViewer">
-                <div class="placeholder">
-                    <div class="demo-icon">🎬</div>
-                    <h3>YouTube Player Listo</h3>
-                    <p>Selecciona una proyección para ver el video</p>
-                    <p style="color: #00ff00; font-size: 0.9rem; font-weight: bold;">✅ Videos verificados para Netlify</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="controls-panel">
-            <div class="control-section" style="min-width: 250px;">
-                <h3>📋 Casos Clínicos</h3>
-                <div class="case-option active" onclick="selectCase('normal')">
-                    <div class="case-title">Anatomía Normal</div>
-                    <div class="case-desc">Videos médicos educativos</div>
-                </div>
-            </div>
-
-            <div class="control-section">
-                <h3>📐 Proyecciones Angiográficas</h3>
-                <div class="projection-buttons">
-                    <button class="projection-btn" onclick="setProjection('RAO30')">RAO 30°</button>
-                    <button class="projection-btn" onclick="setProjection('LAO45')">LAO 45°</button>
-                    <button class="projection-btn" onclick="setProjection('LAO60')">LAO 60°</button>
-                    <button class="projection-btn" onclick="setProjection('RAO30-CRAN30')">RAO 30° CRAN 30°</button>
-                    <button class="projection-btn" onclick="setProjection('LAO45-CRAN30')">LAO 45° CRAN 30°</button>
-                    <button class="projection-btn" onclick="setProjection('LAO45-CAUD30')">LAO 45° CAUD 30°</button>
-                    <button class="projection-btn" onclick="setProjection('AP-CRAN30')">AP CRAN 30°</button>
-                    <button class="projection-btn" onclick="setProjection('AP-CAUD30')">AP CAUD 30°</button>
-                </div>
-            </div>
-
-            <div class="control-section">
-                <h3>⚙️ Visualización</h3>
-                <div class="view-controls">
-                    <button class="view-btn active" id="btnAll" onclick="toggleArtery('all')">Todas las Arterias</button>
-                    <button class="view-btn" id="btnLCA" onclick="toggleArtery('lca')">Sistema Izquierdo</button>
-                    <button class="view-btn" id="btnRCA" onclick="toggleArtery('rca')">Sistema Derecho</button>
-                    <button class="view-btn" onclick="toggleHeart()">🫀 Corazón</button>
-                    <button class="view-btn" onclick="toggleRotation()" id="btnRotate">▶️ Rotar</button>
-                </div>
-            </div>
+        <div class="header-right">
+            <button class="header-btn" onclick="exportImage()">📸 Capturar</button>
+            <button class="header-btn" onclick="toggleFullscreen()">⛶ Pantalla Completa</button>
+            <button class="header-btn" onclick="showHelp()">❓ Ayuda</button>
         </div>
     </div>
 
-    <div class="instruction-note">
-        ✅ <strong>SISTEMA FUNCIONANDO</strong><br>
-        Videos de YouTube con embed permitido<br>
-        <small>Compatibles con Netlify y otros servidores</small>
+    <div class="main-container">
+        <!-- Sidebar Izquierdo -->
+        <div class="sidebar-left">
+            <div class="control-panel">
+                <h3>🎯 Vistas Angiográficas</h3>
+                <button class="btn btn-small" onclick="setAngiographicView('RAO30')">RAO 30°</button>
+                <button class="btn btn-small" onclick="setAngiographicView('LAO45')">LAO 45°</button>
+                <button class="btn btn-small" onclick="setAngiographicView('RAO30_CRAN')">RAO 30° Cran</button>
+                <button class="btn btn-small" onclick="setAngiographicView('LAO45_CRAN')">LAO 45° Cran</button>
+                <button class="btn btn-small" onclick="setAngiographicView('RAO30_CAUD')">RAO 30° Caud</button>
+                <button class="btn btn-small" onclick="setAngiographicView('LAO45_CAUD')">LAO 45° Caud</button>
+                <button class="btn btn-small" onclick="setAngiographicView('AP_CRAN')">AP Craneal</button>
+                <button class="btn btn-small" onclick="setAngiographicView('AP_CAUD')">AP Caudal</button>
+                <button class="btn btn-small" onclick="setAngiographicView('LATERAL')">Lateral</button>
+                <button class="btn btn-small" onclick="setAngiographicView('SPIDER')">Spider</button>
+            </div>
+
+            <div class="control-panel">
+                <h3>🔍 Visualización</h3>
+                <button class="btn active" id="btnAll" onclick="toggleArteryVisibility('all')">Todas las Arterias</button>
+                <button class="btn" id="btnLCA" onclick="toggleArteryVisibility('lca')">Coronaria Izquierda</button>
+                <button class="btn" id="btnRCA" onclick="toggleArteryVisibility('rca')">Coronaria Derecha</button>
+                
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="chkLabels" checked onchange="toggleLabels()">
+                        <label for="chkLabels">Mostrar Etiquetas</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="chkHeart" checked onchange="toggleHeart()">
+                        <label for="chkHeart">Mostrar Corazón</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="chkGrid" onchange="toggleGrid()">
+                        <label for="chkGrid">Mostrar Cuadrícula</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="chkStenosis" onchange="toggleStenosis()">
+                        <label for="chkStenosis">Mostrar Estenosis</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <h3>⚙️ Controles</h3>
+                <button class="btn" onclick="resetView()">🔄 Restablecer Vista</button>
+                <button class="btn" onclick="toggleRotation()" id="btnRotation">⏸️ Pausar Rotación</button>
+                <button class="btn" onclick="toggleMeasurement()">📏 Modo Medición</button>
+            </div>
+
+            <div class="legend">
+                <h4>Leyenda de Colores</h4>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff4444;"></div>
+                    <div class="legend-text">Tronco y LAD</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff6666;"></div>
+                    <div class="legend-text">Circunfleja (LCx)</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #4444ff;"></div>
+                    <div class="legend-text">Coronaria Derecha</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffaa00;"></div>
+                    <div class="legend-text">Diagonales</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #00ff88;"></div>
+                    <div class="legend-text">Marginales</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff4757;"></div>
+                    <div class="legend-text">Estenosis</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área Principal -->
+        <div class="viewer-container">
+            <div class="viewer-main">
+                <div class="loading" id="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Cargando sistema 3D avanzado...</p>
+                </div>
+                
+                <canvas id="canvas3d"></canvas>
+                
+                <div class="top-controls">
+                    <div class="info-overlay">
+                        <p><span class="highlight">Vista:</span> <span id="currentView">Frontal</span></p>
+                        <p><span class="highlight">Rotación:</span> <span id="rotationAngle">0°</span></p>
+                        <p><span class="highlight">Zoom:</span> <span id="zoomLevel">100%</span></p>
+                    </div>
+                    
+                    <div class="info-overlay info-overlay-right">
+                        <p><span class="highlight">Modo:</span> <span id="currentMode">Visualización</span></p>
+                        <p><span class="highlight">Arterias:</span> <span id="visibleArteries">Todas</span></p>
+                    </div>
+                </div>
+                
+                <div class="center-crosshair" id="crosshair" style="display: none;"></div>
+            </div>
+
+            <!-- Panel Inferior con Proyecciones Angiográficas -->
+            <div class="bottom-panel">
+                <div class="angiography-view" onclick="setAngiographicView('RAO30')">
+                    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); height: 130px; border-radius: 5px; border: 2px solid #00d4ff; display: flex; align-items: center; justify-content: center;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem;">↗️</div>
+                            <div style="font-size: 0.8rem; color: #00d4ff;">RAO 30°</div>
+                        </div>
+                    </div>
+                    <p>RAO 30°</p>
+                </div>
+
+                <div class="angiography-view" onclick="setAngiographicView('LAO45')">
+                    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); height: 130px; border-radius: 5px; border: 2px solid #00d4ff; display: flex; align-items: center; justify-content: center;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem;">↖️</div>
+                            <div style="font-size: 0.8rem; color: #00d4ff;">LAO 45°</div>
+                        </div>
+                    </div>
+                    <p>LAO 45°</p>
+                </div>
+
+                <div class="angiography-view" onclick="setAngiographicView('RAO30_CRAN')">
+                    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); height: 130px; border-radius: 5px; border: 2px solid #00d4ff; display: flex; align-items: center; justify-content: center;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem;">⬈</div>
+                            <div style="font-size: 0.8rem; color: #00d4ff;">RAO Craneal</div>
+                        </div>
+                    </div>
+                    <p>RAO 30° Craneal</p>
+                </div>
+
+                <div class="angiography-view" onclick="setAngiographicView('LAO45_CAUD')">
+                    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); height: 130px; border-radius: 5px; border: 2px solid #00d4ff; display: flex; align-items: center; justify-content: center;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem;">⬋</div>
+                            <div style="font-size: 0.8rem; color: #00d4ff;">LAO Caudal</div>
+                        </div>
+                    </div>
+                    <p>LAO 45° Caudal</p>
+                </div>
+
+                <div class="angiography-view" onclick="setAngiographicView('SPIDER')">
+                    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); height: 130px; border-radius: 5px; border: 2px solid #00d4ff; display: flex; align-items: center; justify-content: center;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem;">🕷️</div>
+                            <div style="font-size: 0.8rem; color: #00d4ff;">Spider View</div>
+                        </div>
+                    </div>
+                    <p>Vista Spider</p>
+                </div>
+
+                <div class="angiography-view" onclick="setAngiographicView('AP_CRAN')">
+                    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); height: 130px; border-radius: 5px; border: 2px solid #00d4ff; display: flex; align-items: center; justify-content: center;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem;">⬆️</div>
+                            <div style="font-size: 0.8rem; color: #00d4ff;">AP Craneal</div>
+                        </div>
+                    </div>
+                    <p>AP Craneal</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Derecho -->
+        <div class="sidebar-right">
+            <div class="control-panel">
+                <h3>🩺 Simulación de Catéteres</h3>
+                <div class="catheter-controls">
+                    <button class="catheter-btn" onclick="addCatheter('JL4')">JL4</button>
+                    <button class="catheter-btn" onclick="addCatheter('JR4')">JR4</button>
+                    <button class="catheter-btn" onclick="addCatheter('AL1')">AL1</button>
+                </div>
+                <div class="catheter-controls">
+                    <button class="catheter-btn" onclick="addCatheter('EBU')">EBU</button>
+                    <button class="catheter-btn" onclick="addCatheter('MP')">MP</button>
+                    <button class="catheter-btn" onclick="addCatheter('clear')">❌ Limpiar</button>
+                </div>
+                
+                <div class="slider-control">
+                    <label>Avance del Catéter <span class="slider-value" id="catheterProgress">0%</span></label>
+                    <input type="range" min="0" max="100" value="0" id="catheterSlider" oninput="updateCatheterProgress(this.value)">
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <h3>📏 Mediciones</h3>
+                <div class="measurements-list" id="measurementsList">
+                    <p style="text-align: center; color: #666; font-size: 0.8rem;">No hay mediciones</p>
+                </div>
+                <button class="btn" onclick="clearMeasurements()">🗑️ Limpiar Mediciones</button>
+            </div>
+
+            <div class="control-panel">
+                <h3>🎨 Apariencia</h3>
+                <div class="slider-control">
+                    <label>Opacidad Corazón <span class="slider-value" id="heartOpacity">30%</span></label>
+                    <input type="range" min="0" max="100" value="30" oninput="updateHeartOpacity(this.value)">
+                </div>
+                
+                <div class="slider-control">
+                    <label>Grosor Arterias <span class="slider-value" id="arteryThickness">100%</span></label>
+                    <input type="range" min="50" max="200" value="100" oninput="updateArteryThickness(this.value)">
+                </div>
+
+                <label style="display: block; margin: 10px 0 5px 0; font-size: 0.85rem; color: #a0a0a0;">Color de Fondo</label>
+                <div class="color-picker-group">
+                    <div class="color-option active" style="background: #0a0a0a;" onclick="changeBackground('#0a0a0a')"></div>
+                    <div class="color-option" style="background: #1a1a2e;" onclick="changeBackground('#1a1a2e')"></div>
+                    <div class="color-option" style="background: #0f3460;" onclick="changeBackground('#0f3460')"></div>
+                    <div class="color-option" style="background: #16213e;" onclick="changeBackground('#16213e')"></div>
+                    <div class="color-option" style="background: #2c3e50;" onclick="changeBackground('#2c3e50')"></div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <h3>📊 Información del Paciente</h3>
+                <div class="info-card">
+                    <h4>Datos de Ejemplo</h4>
+                    <p><strong>Nombre:</strong> Simulación</p>
+                    <p><strong>Edad:</strong> -- años</p>
+                    <p><strong>Indicación:</strong> Educacional</p>
+                    <p><strong>Fecha:</strong> <span id="currentDate"></span></p>
+                </div>
+            </div>
+
+            <div class="info-card" style="background: rgba(255, 170, 0, 0.1); border-left-color: #ffaa00;">
+                <h4>💡 Tips Rápidos</h4>
+                <ul style="font-size: 0.75rem;">
+                    <li>Click + arrastrar para rotar</li>
+                    <li>Scroll para zoom</li>
+                    <li>Doble click para centrar</li>
+                    <li>Click derecho para menú</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Ayuda -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('helpModal')">&times;</span>
+            <h2>📖 Guía de Uso del Sistema</h2>
+            
+            <h3 style="color: #00d4ff; margin-top: 20px;">Controles Básicos</h3>
+            <ul>
+                <li><strong>Rotación:</strong> Click izquierdo + arrastrar</li>
+                <li><strong>Zoom:</strong> Rueda del mouse o scroll</li>
+                <li><strong>Paneo:</strong> Click derecho + arrastrar</li>
+                <li><strong>Centrar:</strong> Doble click en el modelo</li>
+            </ul>
+
+            <h3 style="color: #00d4ff; margin-top: 20px;">Vistas Angiográficas Estándar</h3>
+            <ul>
+                <li><strong>RAO 30°:</strong> Oblicua anterior derecha - Visualiza LAD proximal</li>
+                <li><strong>LAO 45°:</strong> Oblicua anterior izquierda - Visualiza circunfleja</li>
+                <li><strong>RAO Craneal:</strong> Mejor vista de LAD medio y distal</li>
+                <li><strong>LAO Caudal:</strong> Óptima para el tronco común izquierdo</li>
+                <li><strong>Spider View:</strong> Vista craneal extrema para bifurcación</li>
+            </ul>
+
+            <h3 style="color: #00d4ff; margin-top: 20px;">Funciones Avanzadas</h3>
+            <ul>
+                <li><strong>Simulación de Catéteres:</strong> Selecciona el tipo y ajusta su posición</li>
+                <li><strong>Mediciones:</strong> Activa el modo y haz click en dos puntos</li>
+                <li><strong>Visualización Selectiva:</strong> Oculta/muestra arterias específicas</li>
+                <li><strong>Captura de Pantalla:</strong> Guarda la vista actual en alta resolución</li>
+            </ul>
+
+            <h3 style="color: #00d4ff; margin-top: 20px;">Aplicaciones Clínicas</h3>
+            <ul>
+                <li>Planificación pre-procedimiento</li>
+                <li>Educación de pacientes y residentes</li>
+                <li>Presentaciones de casos clínicos</li>
+                <li>Evaluación de estenosis y anatomía coronaria</li>
+            </ul>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // 🎬 BASE DE DATOS DE VIDEOS YOUTUBE
-        // ✅ IDs VERIFICADOS - FUNCIONAN EN NETLIFY Y SERVIDORES EXTERNOS
-        // Estos son videos educativos médicos con embed habilitado
-        const projectionDatabase = {
-            'normal': {
-                'RAO30': { 
-                    youtubeId: 'Sp3Q-p_gDS8',  // Video cardiología educativo
-                    desc: 'RAO 30° - Proyección oblicua anterior derecha', 
-                    cam: {x:12, y:3, z:12} 
-                },
-                'RAO30-CRAN30': { 
-                    youtubeId: 'yVpbFMhOJCI',  // Angiografía coronaria
-                    desc: 'RAO 30° CRAN 30° - Bifurcación tronco principal', 
-                    cam: {x:10, y:12, z:10} 
-                },
-                'LAO45': { 
-                    youtubeId: 'L_LUpnjgPso',  // Cateterismo cardíaco
-                    desc: 'LAO 45° - Descendente anterior izquierda', 
-                    cam: {x:-12, y:3, z:12} 
-                },
-                'LAO45-CRAN30': { 
-                    youtubeId: 'cSnkWzZ7ZAA',  // Anatomía coronaria
-                    desc: 'LAO 45° CRAN 30° - Segmento proximal LAD', 
-                    cam: {x:-10, y:12, z:10} 
-                },
-                'LAO45-CAUD30': { 
-                    youtubeId: 'YykjpeuMNEk',  // ECG y corazón
-                    desc: 'LAO 45° CAUD 30° - Circunfleja izquierda', 
-                    cam: {x:-10, y:-10, z:12} 
-                },
-                'AP-CRAN30': { 
-                    youtubeId: '3_PYnWVoUzM',  // Fisiología cardíaca
-                    desc: 'AP CRAN 30° - Segmento distal LAD', 
-                    cam: {x:0, y:15, z:12} 
-                },
-                'AP-CAUD30': { 
-                    youtubeId: 'X3s4Bwnp7VM',  // Circulación coronaria
-                    desc: 'AP CAUD 30° - Coronaria derecha distal', 
-                    cam: {x:0, y:-12, z:15} 
-                },
-                'LAO60': { 
-                    youtubeId: 'SEuCRRL6BhQ',  // Anatomía cardiovascular
-                    desc: 'LAO 60° - Vista lateral izquierda', 
-                    cam: {x:-15, y:3, z:10} 
-                }
-            }
+        // Variables globales
+        let scene, camera, renderer, heart, arteries = {}, labels = [], catheters = [];
+        let isRotating = true, measurementMode = false, currentCatheter = null;
+        let measurements = [], stenosisMarkers = [];
+        let controls = {
+            isDragging: false,
+            previousMousePosition: { x: 0, y: 0 },
+            rotationSpeed: 0.01,
+            zoomLevel: 15
         };
 
-        let scene, camera, renderer, coronaries, isRotating = false, currentCase = 'normal';
-        let currentVideoId = null;
+        // Datos de estenosis predefinidas para simulación
+        const stenosisData = [
+            { position: new THREE.Vector3(-0.8, 0.5, 2.3), severity: 70, artery: 'LAD Proximal' },
+            { position: new THREE.Vector3(1.5, 1.2, 1.5), severity: 50, artery: 'RCA Media' }
+        ];
 
         function init() {
-            const canvas = document.getElementById('canvas3d');
+            // Configurar escena
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a1929);
+            scene.background = new THREE.Color(0x0a0a0a);
+            scene.fog = new THREE.Fog(0x0a0a0a, 20, 50);
+
+            // Configurar cámara
+            const canvas = document.getElementById('canvas3d');
             camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-            camera.position.set(0, 8, 20);
-            renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-            
-            scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-            const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            mainLight.position.set(10, 10, 10);
-            scene.add(mainLight);
+            camera.position.set(0, 5, 15);
+            camera.lookAt(0, 0, 0);
 
-            coronaries = new THREE.Group();
-            scene.add(coronaries);
-            createCoronaryModel();
-            
-            const gridHelper = new THREE.GridHelper(30, 30, 0x00d4ff, 0x003344);
-            gridHelper.position.y = -8;
-            scene.add(gridHelper);
-
-            let isDragging = false, prevMouse = {x:0, y:0};
-            canvas.addEventListener('mousedown', (e) => { 
-                isDragging = true; 
-                prevMouse = {x:e.clientX, y:e.clientY}; 
+            // Configurar renderer
+            renderer = new THREE.WebGLRenderer({ 
+                canvas, 
+                antialias: true,
+                preserveDrawingBuffer: true 
             });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Iluminación mejorada
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight1.position.set(10, 10, 10);
+            directionalLight1.castShadow = true;
+            scene.add(directionalLight1);
+
+            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight2.position.set(-10, 5, -10);
+            scene.add(directionalLight2);
+
+            const pointLight = new THREE.PointLight(0x00d4ff, 0.3, 50);
+            pointLight.position.set(0, 0, 10);
+            scene.add(pointLight);
+
+            // Crear elementos
+            createHeart();
+            createCoronaryArteries();
+            createLabels();
+            createStenosisMarkers();
+
+            // Event listeners
+            setupEventListeners();
+
+            // Actualizar fecha
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('es-PE');
+
+            // Ocultar loading
+            document.getElementById('loading').style.display = 'none';
+
+            // Iniciar animación
+            animate();
+        }
+
+        function createHeart() {
+            heart = new THREE.Group();
+
+            // Crear forma de corazón más realista
+            const heartShape = new THREE.Shape();
+            
+            // Ventrículo izquierdo (más grande)
+            const leftVentricle = new THREE.SphereGeometry(1.8, 32, 32);
+            const lvMaterial = new THREE.MeshPhongMaterial({
+                color: 0x880000,
+                transparent: true,
+                opacity: 0.3,
+                shininess: 30,
+                side: THREE.DoubleSide
+            });
+            const lvMesh = new THREE.Mesh(leftVentricle, lvMaterial);
+            lvMesh.scale.set(1.3, 1.4, 1);
+            lvMesh.position.set(-0.3, -0.2, 0);
+            heart.add(lvMesh);
+
+            // Ventrículo derecho (más pequeño)
+            const rightVentricle = new THREE.SphereGeometry(1.4, 32, 32);
+            const rvMesh = new THREE.Mesh(rightVentricle, lvMaterial);
+            rvMesh.scale.set(1, 1.2, 0.9);
+            rvMesh.position.set(0.8, -0.1, 0.3);
+            heart.add(rvMesh);
+
+            // Aurículas
+            const atrium = new THREE.SphereGeometry(0.9, 32, 32);
+            const atriumMaterial = new THREE.MeshPhongMaterial({
+                color: 0xaa0000,
+                transparent: true,
+                opacity: 0.25,
+                shininess: 30
+            });
+            
+            const leftAtrium = new THREE.Mesh(atrium, atriumMaterial);
+            leftAtrium.position.set(-0.5, 1.3, -0.2);
+            heart.add(leftAtrium);
+
+            const rightAtrium = new THREE.Mesh(atrium, atriumMaterial);
+            rightAtrium.scale.set(0.9, 0.9, 0.9);
+            rightAtrium.position.set(0.7, 1.2, 0);
+            heart.add(rightAtrium);
+
+            scene.add(heart);
+        }
+
+        function createCoronaryArteries() {
+            // Sistema Coronario Izquierdo
+            
+            // Tronco Común Izquierdo (LM)
+            arteries.lm = createArterySegment(
+                new THREE.Vector3(0, 1.8, 2.2),
+                new THREE.Vector3(-0.5, 1.4, 2.4),
+                0.18,
+                0xff4444,
+                'lca',
+                'LM'
+            );
+
+            // Descendente Anterior (LAD)
+            const ladPoints = [
+                new THREE.Vector3(-0.5, 1.4, 2.4),
+                new THREE.Vector3(-0.9, 0.8, 2.5),
+                new THREE.Vector3(-1.1, 0, 2.4),
+                new THREE.Vector3(-1.2, -0.8, 2.2),
+                new THREE.Vector3(-1.1, -1.6, 2),
+                new THREE.Vector3(-0.8, -2.2, 1.8)
+            ];
+            arteries.lad = createCurvedArtery(ladPoints, 0.14, 0xff4444, 'lca', 'LAD');
+
+            // Ramas Diagonales
+            arteries.d1 = createArterySegment(
+                new THREE.Vector3(-0.9, 0.8, 2.5),
+                new THREE.Vector3(-1.6, 0.9, 2.8),
+                0.09,
+                0xffaa00,
+                'lca',
+                'D1'
+            );
+
+            arteries.d2 = createArterySegment(
+                new THREE.Vector3(-1.1, 0, 2.4),
+                new THREE.Vector3(-1.9, -0.1, 2.7),
+                0.08,
+                0xffaa00,
+                'lca',
+                'D2'
+            );
+
+            // Ramas Septales
+            arteries.s1 = createArterySegment(
+                new THREE.Vector3(-1.1, 0, 2.4),
+                new THREE.Vector3(-0.8, -0.2, 1.8),
+                0.06,
+                0xff8844,
+                'lca',
+                'S1'
+            );
+
+            // Circunfleja (LCx)
+            const lcxPoints = [
+                new THREE.Vector3(-0.5, 1.4, 2.4),
+                new THREE.Vector3(-1, 1.3, 1.8),
+                new THREE.Vector3(-1.6, 1, 1),
+                new THREE.Vector3(-2, 0.6, 0),
+                new THREE.Vector3(-2.2, 0.2, -0.8),
+                new THREE.Vector3(-2, -0.3, -1.4)
+            ];
+            arteries.lcx = createCurvedArtery(lcxPoints, 0.12, 0xff6666, 'lca', 'LCx');
+
+            // Marginales Obtusas
+            arteries.om1 = createArterySegment(
+                new THREE.Vector3(-1, 1.3, 1.8),
+                new THREE.Vector3(-2.1, 1.5, 2),
+                0.09,
+                0x00ff88,
+                'lca',
+                'OM1'
+            );
+
+            arteries.om2 = createArterySegment(
+                new THREE.Vector3(-1.6, 1, 1),
+                new THREE.Vector3(-2.4, 1.1, 1.3),
+                0.08,
+                0x00ff88,
+                'lca',
+                'OM2'
+            );
+
+            arteries.om3 = createArterySegment(
+                new THREE.Vector3(-2, 0.6, 0),
+                new THREE.Vector3(-2.6, 0.5, 0.3),
+                0.07,
+                0x00ff88,
+                'lca',
+                'OM3'
+            );
+
+            // Sistema Coronario Derecho
+
+            // Coronaria Derecha (RCA)
+            const rcaPoints = [
+                new THREE.Vector3(0, 1.8, 2.2),
+                new THREE.Vector3(0.8, 1.6, 2),
+                new THREE.Vector3(1.6, 1.2, 1.4),
+                new THREE.Vector3(2.1, 0.6, 0.5),
+                new THREE.Vector3(2.2, -0.2, -0.5),
+                new THREE.Vector3(2, -1, -1.2),
+                new THREE.Vector3(1.3, -1.7, -1.6),
+                new THREE.Vector3(0.5, -2.1, -1.5)
+            ];
+            arteries.rca = createCurvedArtery(rcaPoints, 0.14, 0x4444ff, 'rca', 'RCA');
+
+            // Rama del Cono
+            arteries.conus = createArterySegment(
+                new THREE.Vector3(0.8, 1.6, 2),
+                new THREE.Vector3(1.2, 1.8, 2.3),
+                0.07,
+                0x6666ff,
+                'rca',
+                'Cono'
+            );
+
+            // Rama del Nodo Sinusal
+            arteries.sinus = createArterySegment(
+                new THREE.Vector3(0.8, 1.6, 2),
+                new THREE.Vector3(0.6, 2.1, 1.8),
+                0.06,
+                0x6666ff,
+                'rca',
+                'N.Sinusal'
+            );
+
+            // Rama Aguda Marginal
+            arteries.am = createArterySegment(
+                new THREE.Vector3(2.1, 0.6, 0.5),
+                new THREE.Vector3(2.6, 0.7, 0.9),
+                0.08,
+                0x6666ff,
+                'rca',
+                'AM'
+            );
+
+            // Descendente Posterior (PDA)
+            const pdaPoints = [
+                new THREE.Vector3(0.5, -2.1, -1.5),
+                new THREE.Vector3(0, -2.3, -1),
+                new THREE.Vector3(-0.4, -2.4, -0.4),
+                new THREE.Vector3(-0.6, -2.3, 0.3)
+            ];
+            arteries.pda = createCurvedArtery(pdaPoints, 0.1, 0x6666ff, 'rca', 'PDA');
+
+            // Rama Posterolateral
+            arteries.pl = createArterySegment(
+                new THREE.Vector3(1.3, -1.7, -1.6),
+                new THREE.Vector3(0.8, -2, -2.2),
+                0.08,
+                0x6666ff,
+                'rca',
+                'PL'
+            );
+        }
+
+        function createArterySegment(start, end, radius, color, group, name) {
+            const direction = new THREE.Vector3().subVectors(end, start);
+            const length = direction.length();
+            
+            const geometry = new THREE.CylinderGeometry(radius, radius * 0.9, length, 16);
+            const material = new THREE.MeshPhongMaterial({
+                color: color,
+                shininess: 100,
+                specular: 0xffffff,
+                emissive: color,
+                emissiveIntensity: 0.1
+            });
+            
+            const artery = new THREE.Mesh(geometry, material);
+            artery.position.copy(start).add(direction.multiplyScalar(0.5));
+            
+            const axis = new THREE.Vector3(0, 1, 0);
+            artery.quaternion.setFromUnitVectors(axis, direction.normalize());
+            
+            artery.userData = { 
+                group: group, 
+                name: name,
+                start: start.clone(),
+                end: end.clone()
+            };
+            
+            heart.add(artery);
+            return artery;
+        }
+
+        function createCurvedArtery(points, radius, color, group, name) {
+            const curve = new THREE.CatmullRomCurve3(points);
+            const tubeGeometry = new THREE.TubeGeometry(curve, 64, radius, 16, false);
+            const material = new THREE.MeshPhongMaterial({
+                color: color,
+                shininess: 100,
+                specular: 0xffffff,
+                emissive: color,
+                emissiveIntensity: 0.1
+            });
+            
+            const artery = new THREE.Mesh(tubeGeometry, material);
+            artery.userData = { 
+                group: group, 
+                name: name,
+                curve: curve
+            };
+            
+            heart.add(artery);
+            return artery;
+        }
+
+        function createLabels() {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 256;
+            canvas.height = 64;
+
+            const labelPositions = [
+                { name: 'LAD', pos: new THREE.Vector3(-1.1, 0, 2.6) },
+                { name: 'LCx', pos: new THREE.Vector3(-2, 0.6, 0.2) },
+                { name: 'RCA', pos: new THREE.Vector3(2.2, -0.2, -0.3) },
+                { name: 'LM', pos: new THREE.Vector3(-0.5, 1.4, 2.6) }
+            ];
+
+            labelPositions.forEach(label => {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.fillStyle = '#00d4ff';
+                context.font = 'Bold 48px Arial';
+                context.textAlign = 'center';
+                context.fillText(label.name, canvas.width / 2, canvas.height / 2 + 16);
+
+                const texture = new THREE.CanvasTexture(canvas);
+                const spriteMaterial = new THREE.SpriteMaterial({ 
+                    map: texture,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                const sprite = new THREE.Sprite(spriteMaterial);
+                sprite.position.copy(label.pos);
+                sprite.scale.set(1, 0.25, 1);
+                sprite.userData.isLabel = true;
+                
+                labels.push(sprite);
+                heart.add(sprite);
+            });
+        }
+
+        function createStenosisMarkers() {
+            stenosisData.forEach(stenosis => {
+                const geometry = new THREE.SphereGeometry(0.15, 16, 16);
+                const material = new THREE.MeshPhongMaterial({
+                    color: 0xff4757,
+                    emissive: 0xff0000,
+                    emissiveIntensity: 0.5,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const marker = new THREE.Mesh(geometry, material);
+                marker.position.copy(stenosis.position);
+                marker.userData = {
+                    isStenosis: true,
+                    severity: stenosis.severity,
+                    artery: stenosis.artery
+                };
+                marker.visible = false;
+                
+                stenosisMarkers.push(marker);
+                heart.add(marker);
+            });
+        }
+
+        function setupEventListeners() {
+            const canvas = document.getElementById('canvas3d');
+
+            canvas.addEventListener('mousedown', (e) => {
+                controls.isDragging = true;
+                controls.previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
             canvas.addEventListener('mousemove', (e) => {
-                if (isDragging) {
-                    coronaries.rotation.y += (e.clientX - prevMouse.x) * 0.01;
-                    coronaries.rotation.x += (e.clientY - prevMouse.y) * 0.01;
-                    prevMouse = {x:e.clientX, y:e.clientY};
+                if (controls.isDragging && !measurementMode) {
+                    const deltaX = e.clientX - controls.previousMousePosition.x;
+                    const deltaY = e.clientY - controls.previousMousePosition.y;
+
+                    heart.rotation.y += deltaX * controls.rotationSpeed;
+                    heart.rotation.x += deltaY * controls.rotationSpeed;
+
+                    controls.previousMousePosition = { x: e.clientX, y: e.clientY };
+                    
+                    updateRotationDisplay();
                 }
             });
-            canvas.addEventListener('mouseup', () => isDragging = false);
+
+            canvas.addEventListener('mouseup', () => {
+                controls.isDragging = false;
+            });
+
             canvas.addEventListener('wheel', (e) => {
                 e.preventDefault();
-                camera.position.z = Math.max(8, Math.min(40, camera.position.z + e.deltaY * 0.02));
+                const delta = e.deltaY * -0.01;
+                controls.zoomLevel += delta;
+                controls.zoomLevel = Math.max(8, Math.min(30, controls.zoomLevel));
+                camera.position.z = controls.zoomLevel;
+                updateZoomDisplay();
             });
 
-            window.addEventListener('resize', () => {
-                camera.aspect = canvas.clientWidth / canvas.clientHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            canvas.addEventListener('dblclick', () => {
+                resetView();
             });
 
-            animate();
-            console.log('✅ Sistema 3D inicializado');
+            window.addEventListener('resize', onWindowResize);
         }
 
-        function createCoronaryModel() {
-            // Corazón
-            const heartGeo = new THREE.SphereGeometry(3, 32, 32);
-            heartGeo.scale(1, 1.3, 0.9);
-            const heart = new THREE.Mesh(
-                heartGeo, 
-                new THREE.MeshPhongMaterial({
-                    color: 0x8b0000, 
-                    transparent: true, 
-                    opacity: 0.25
-                })
-            );
-            heart.name = 'heartMesh';
-            coronaries.add(heart);
+        function animate() {
+            requestAnimationFrame(animate);
 
-            const createArtery = (points, radius, color, group) => {
-                const curve = new THREE.CatmullRomCurve3(points);
-                const geo = new THREE.TubeGeometry(curve, 64, radius, 16, false);
-                const mat = new THREE.MeshPhongMaterial({
-                    color: color, 
-                    shininess: 100, 
-                    emissive: color, 
-                    emissiveIntensity: 0.1
-                });
-                const mesh = new THREE.Mesh(geo, mat);
-                mesh.userData.group = group;
-                coronaries.add(mesh);
+            if (isRotating && !controls.isDragging) {
+                heart.rotation.y += 0.003;
+                updateRotationDisplay();
+            }
+
+            // Animar estenosis
+            stenosisMarkers.forEach((marker, index) => {
+                if (marker.visible) {
+                    marker.scale.set(
+                        1 + Math.sin(Date.now() * 0.003 + index) * 0.2,
+                        1 + Math.sin(Date.now() * 0.003 + index) * 0.2,
+                        1 + Math.sin(Date.now() * 0.003 + index) * 0.2
+                    );
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        // Funciones de control
+        function setAngiographicView(view) {
+            const views = {
+                'RAO30': { pos: [10, 3, 10], name: 'RAO 30°' },
+                'LAO45': { pos: [-12, 3, 10], name: 'LAO 45°' },
+                'RAO30_CRAN': { pos: [10, 12, 8], name: 'RAO 30° Craneal' },
+                'LAO45_CRAN': { pos: [-12, 12, 8], name: 'LAO 45° Craneal' },
+                'RAO30_CAUD': { pos: [10, -8, 10], name: 'RAO 30° Caudal' },
+                'LAO45_CAUD': { pos: [-12, -8, 10], name: 'LAO 45° Caudal' },
+                'AP_CRAN': { pos: [0, 18, 8], name: 'AP Craneal' },
+                'AP_CAUD': { pos: [0, -15, 8], name: 'AP Caudal' },
+                'LATERAL': { pos: [20, 0, 0], name: 'Lateral' },
+                'SPIDER': { pos: [0, 20, 5], name: 'Spider View' }
             };
 
-            // Sistema coronario izquierdo (LCA) - ROJO
-            createArtery([
-                new THREE.Vector3(-1, 3, 2), 
-                new THREE.Vector3(-1.5, 2.5, 2.2)
-            ], 0.18, 0xff0000, 'lca');
-            
-            createArtery([
-                new THREE.Vector3(-1.5, 2.5, 2.2), 
-                new THREE.Vector3(-1.8, 1, 2.5), 
-                new THREE.Vector3(-1.5, -1, 2.6), 
-                new THREE.Vector3(-1, -3, 2.4), 
-                new THREE.Vector3(-0.6, -4.5, 2.0)
-            ], 0.14, 0xff0000, 'lca');
-            
-            createArtery([
-                new THREE.Vector3(-1.5, 2.5, 2.2), 
-                new THREE.Vector3(-2.5, 2, 0.5), 
-                new THREE.Vector3(-3.5, 0.5, -1), 
-                new THREE.Vector3(-3.2, -1, -1.8)
-            ], 0.12, 0xff0000, 'lca');
-
-            // Sistema coronario derecho (RCA) - AZUL
-            createArtery([
-                new THREE.Vector3(1, 3, 2), 
-                new THREE.Vector3(3, 2, 0.5), 
-                new THREE.Vector3(4, 0, -1), 
-                new THREE.Vector3(3.5, -1.5, -2), 
-                new THREE.Vector3(2, -2.5, -2.3)
-            ], 0.14, 0x4444ff, 'rca');
-            
-            createArtery([
-                new THREE.Vector3(2, -2.5, -2.3), 
-                new THREE.Vector3(0.5, -3.5, -2), 
-                new THREE.Vector3(-0.5, -4.5, -1.5)
-            ], 0.11, 0x6666ff, 'rca');
+            if (views[view]) {
+                camera.position.set(...views[view].pos);
+                camera.lookAt(0, 0, 0);
+                document.getElementById('currentView').textContent = views[view].name;
+            }
         }
 
-        function setProjection(proj) {
-            // Actualizar botones
-            document.querySelectorAll('.projection-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
+        function toggleArteryVisibility(type) {
+            ['btnAll', 'btnLCA', 'btnRCA'].forEach(id => {
+                document.getElementById(id).classList.remove('active');
+            });
+
+            if (type === 'all') {
+                document.getElementById('btnAll').classList.add('active');
+                document.getElementById('visibleArteries').textContent = 'Todas';
+            } else if (type === 'lca') {
+                document.getElementById('btnLCA').classList.add('active');
+                document.getElementById('visibleArteries').textContent = 'Coronaria Izquierda';
+            } else if (type === 'rca') {
+                document.getElementById('btnRCA').classList.add('active');
+                document.getElementById('visibleArteries').textContent = 'Coronaria Derecha';
+            }
+
+            heart.children.forEach(child => {
+                if (child.userData.group) {
+                    child.visible = type === 'all' || child.userData.group === type;
+                }
+            });
+        }
+
+        function toggleLabels() {
+            const visible = document.getElementById('chkLabels').checked;
+            labels.forEach(label => label.visible = visible);
+        }
+
+        function toggleHeart() {
+            const visible = document.getElementById('chkHeart').checked;
+            heart.children.forEach(child => {
+                if (!child.userData.group && !child.userData.isLabel && !child.userData.isStenosis) {
+                    child.visible = visible;
+                }
+            });
+        }
+
+        function toggleGrid() {
+            const visible = document.getElementById('chkGrid').checked;
+            let gridHelper = scene.getObjectByName('gridHelper');
             
-            const data = projectionDatabase[currentCase]?.[proj];
-            if (!data) {
-                console.error('❌ Proyección no encontrada:', proj);
+            if (visible && !gridHelper) {
+                gridHelper = new THREE.GridHelper(20, 20, 0x00d4ff, 0x444444);
+                gridHelper.name = 'gridHelper';
+                scene.add(gridHelper);
+            } else if (!visible && gridHelper) {
+                scene.remove(gridHelper);
+            }
+        }
+
+        function toggleStenosis() {
+            const visible = document.getElementById('chkStenosis').checked;
+            stenosisMarkers.forEach(marker => marker.visible = visible);
+        }
+
+        function toggleRotation() {
+            isRotating = !isRotating;
+            const btn = document.getElementById('btnRotation');
+            btn.textContent = isRotating ? '⏸️ Pausar Rotación' : '▶️ Reanudar Rotación';
+        }
+
+        function resetView() {
+            camera.position.set(0, 5, 15);
+            camera.lookAt(0, 0, 0);
+            heart.rotation.set(0, 0, 0);
+            controls.zoomLevel = 15;
+            updateRotationDisplay();
+            updateZoomDisplay();
+            document.getElementById('currentView').textContent = 'Frontal';
+        }
+
+        function toggleMeasurement() {
+            measurementMode = !measurementMode;
+            document.getElementById('currentMode').textContent = measurementMode ? 'Medición' : 'Visualización';
+            document.getElementById('crosshair').style.display = measurementMode ? 'block' : 'none';
+        }
+
+        function updateHeartOpacity(value) {
+            document.getElementById('heartOpacity').textContent = value + '%';
+            heart.children.forEach(child => {
+                if (!child.userData.group && !child.userData.isLabel) {
+                    if (child.material) {
+                        child.material.opacity = value / 100 * 0.5;
+                    }
+                }
+            });
+        }
+
+        function updateArteryThickness(value) {
+            document.getElementById('arteryThickness').textContent = value + '%';
+            const scale = value / 100;
+            heart.children.forEach(child => {
+                if (child.userData.group) {
+                    child.scale.set(scale, 1, scale);
+                }
+            });
+        }
+
+        function changeBackground(color) {
+            scene.background = new THREE.Color(color);
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function addCatheter(type) {
+            if (type === 'clear') {
+                catheters.forEach(cath => heart.remove(cath));
+                catheters = [];
+                currentCatheter = null;
                 return;
             }
 
-            // Actualizar cámara 3D
-            camera.position.set(data.cam.x, data.cam.y, data.cam.z);
-            camera.lookAt(0, 0, 0);
-            document.getElementById('angleInfo').textContent = `Vista: ${proj}`;
+            // Remover catéter anterior
+            if (currentCatheter) {
+                heart.remove(currentCatheter);
+            }
 
-            // Cargar video de YouTube
-            loadYouTubeVideo(data.youtubeId, data.desc);
-            
-            console.log('✅ Proyección cargada:', proj, '| ID:', data.youtubeId);
-        }
-
-        function loadYouTubeVideo(videoId, description) {
-            const viewer = document.getElementById('angioViewer');
-            currentVideoId = videoId;
-            
-            // Crear iframe de YouTube con parámetros optimizados para embed en servidores
-            viewer.innerHTML = `
-                <div class="youtube-container">
-                    <div class="annotation">${description}</div>
-                    <div class="youtube-wrapper">
-                        <iframe 
-                            src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&origin=${window.location.origin}"
-                            frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            referrerpolicy="strict-origin-when-cross-origin"
-                            allowfullscreen>
-                        </iframe>
-                    </div>
-                </div>
-            `;
-            
-            console.log('🎬 Video cargado:', videoId);
-        }
-
-        function selectCase(c) { 
-            currentCase = c; 
-            document.querySelectorAll('.case-option').forEach(e => e.classList.remove('active')); 
-            event.target.closest('.case-option').classList.add('active'); 
-        }
-
-        function toggleArtery(t) {
-            ['btnAll', 'btnLCA', 'btnRCA'].forEach(id => 
-                document.getElementById(id).classList.remove('active')
-            );
-            document.getElementById('btn' + (t === 'all' ? 'All' : t === 'lca' ? 'LCA' : 'RCA')).classList.add('active');
-            coronaries.children.forEach(c => { 
-                if (c.userData.group) 
-                    c.visible = (t === 'all' || c.userData.group === t); 
+            // Crear nuevo catéter
+            const catheterGeometry = new THREE.CylinderGeometry(0.03, 0.03, 5, 8);
+            const catheterMaterial = new THREE.MeshPhongMaterial({
+                color: 0xffaa00,
+                emissive: 0xff8800,
+                emissiveIntensity: 0.3
             });
+            
+            currentCatheter = new THREE.Mesh(catheterGeometry, catheterMaterial);
+            currentCatheter.position.set(0, -3, 2);
+            currentCatheter.userData.type = type;
+            
+            heart.add(currentCatheter);
+            catheters.push(currentCatheter);
+            
+            document.getElementById('catheterSlider').value = 0;
+            updateCatheterProgress(0);
         }
 
-        function toggleHeart() { 
-            coronaries.children.forEach(c => { 
-                if (c.name === 'heartMesh') 
-                    c.visible = !c.visible; 
-            }); 
+        function updateCatheterProgress(value) {
+            document.getElementById('catheterProgress').textContent = value + '%';
+            if (currentCatheter) {
+                const progress = value / 100;
+                currentCatheter.position.y = -3 + (progress * 4);
+            }
         }
 
-        function toggleRotation() { 
-            isRotating = !isRotating; 
-            document.getElementById('btnRotate').textContent = isRotating ? '⏸️ Pausar' : '▶️ Rotar'; 
+        function clearMeasurements() {
+            measurements = [];
+            document.getElementById('measurementsList').innerHTML = '<p style="text-align: center; color: #666; font-size: 0.8rem;">No hay mediciones</p>';
         }
 
-        function animate() { 
-            requestAnimationFrame(animate); 
-            if (isRotating) coronaries.rotation.y += 0.003; 
-            renderer.render(scene, camera); 
+        function exportImage() {
+            renderer.render(scene, camera);
+            const dataURL = renderer.domElement.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `coronarias-3d-${Date.now()}.png`;
+            link.href = dataURL;
+            link.click();
         }
 
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function showHelp() {
+            document.getElementById('helpModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function updateRotationDisplay() {
+            const angle = Math.round((heart.rotation.y * 180 / Math.PI) % 360);
+            document.getElementById('rotationAngle').textContent = angle + '°';
+        }
+
+        function updateZoomDisplay() {
+            const zoom = Math.round((30 - controls.zoomLevel) / 22 * 100 + 100);
+            document.getElementById('zoomLevel').textContent = zoom + '%';
+        }
+
+        function onWindowResize() {
+            const canvas = document.getElementById('canvas3d');
+            camera.aspect = canvas.clientWidth / canvas.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        }
+
+        // Iniciar cuando cargue la página
         window.addEventListener('load', init);
-        console.log('🎬 Sistema YouTube cargado - Verificado para Netlify');
-        console.log('✅ Todos los videos tienen embed permitido');
     </script>
 </body>
 </html>
